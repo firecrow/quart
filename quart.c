@@ -19,7 +19,11 @@ enum parse_states {
 };
 
 int is_punc(char c){
-    return (c == ';' || c == ',' || c == '<' || c == '>' || c == '!' || c == '=' || c == '{' || c == '}' || c == '[' || c == ']');
+    return (c == ';' || c == ',' || c == '<' || c == '>' || c == '=' || c == '{' || c == '}' || c == '[' || c == ']');
+}
+
+int is_cmp(char c){
+    return (c == '*' || c == '+' || c == '-' || c == '!' || c == '/' || c == '>' || c == '<');
 }
 
 int is_alpha(char c){
@@ -41,6 +45,7 @@ enum token_types {
     QRT_TOKEN_SYMBOL,
     QRT_TOKEN_DECLARE_SYMBOL,
     QRT_TOKEN_STRING,
+    QRT_TOKEN_CMP,
     QRT_TOKEN_BLOCK
 };
 
@@ -59,6 +64,7 @@ enum token_types identify_token(CtlCounted *token){
             }
             if(c == ':'){
                 class = QRT_TOKEN_DECLARE_SYMBOL;
+                continue;
             }
             if(c == '"'){
                 class = QRT_TOKEN_STRING;
@@ -66,6 +72,9 @@ enum token_types identify_token(CtlCounted *token){
                     return QRT_TOKEN_INVALID;
                 continue;
             }
+            if(is_cmp(c)){
+                return QRT_TOKEN_CMP;
+            } 
         }
         /*printf("%c %d\n", c, class);*/
         if(class == QRT_TOKEN_INT){
@@ -113,6 +122,7 @@ void parse(char *source){
                 /*printf("entering symbol: %c\n", *p);*/
                 /*state = QRT_SYMBOL;*/
                 is_definition = 1;
+                ctl_counted_push(shelf, p, 1);
             }else{
                 /*printf("not : %c\n", *p);*/
                 /*state = QRT_SYMBOL;*/
@@ -124,20 +134,10 @@ void parse(char *source){
                     token = emit_token(shelf); 
                     shelf = ctl_counted_alloc(NULL, 0);
                     state = QRT_OUT;
+                    if(is_cmp(*p)){
+                        token = emit_token(ctl_counted_alloc(p, 1));
+                    }
                 }
-            }
-        }else if(state == QRT_PRE_VALUE){
-            if(is_alpha_numeric(*p)){
-                state = QRT_VALUE;
-            }
-        }
-        if(state == QRT_VALUE){
-            if(is_alpha_numeric(*p)){
-                ctl_counted_push(shelf, p, 1);
-            }else if(shelf->length > 0){
-                emit_value(token, shelf); 
-                shelf = ctl_counted_alloc(NULL, 0);
-                state = QRT_OUT;
             }
         }
     }while(*++p != '\0');
