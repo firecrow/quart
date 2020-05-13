@@ -102,7 +102,8 @@ struct qrt_ctx {
     CtlTree *namespace;
     struct qrt_ctx *parent;
     CtlCounted *shelf;
-    Crray stack;
+    Crray *stack;
+    enum parse_states  state;
 };
 
 int qrt_ctx_id = 0;
@@ -112,51 +113,45 @@ struct qrt_ctx * qrt_ctx_alloc(){
     bzero(ctx, sizeof(struct qrt_ctx));
     ctx->id = ++qrt_ctx_id;
     ctx->namespace = ctl_tree_alloc(ctl_tree_crownumber_int_cmp);
+    ctx->stack = ctl_crray_alloc(16); 
     return ctx;
 }
 
-CtlCounted  *emit_token(CtlCounted *name){
+CtlCounted  *emit_token(struct qrt_ctx *ctx, CtlCounted *name){
     printf("token(%d):%s\n", identify_token(name), ctl_counted_to_cstr(name));
     return name;
-}
-
-CtlCounted  *emit_value(CtlCounted *token, CtlCounted *value){
-    printf("pair:%s->%s\n", ctl_counted_to_cstr(token), ctl_counted_to_cstr(value)); 
-    return token;
 }
 
 void parse(char *source){
     char *p = source;
     struct qrt_ctx *ctx = qrt_ctx_alloc();
-    enum parse_states state = QRT_OUT;
-    CtlCounted *shelf = ctl_counted_alloc(NULL, 0);
+    ctx->state = QRT_OUT;
+    ctx->shelf = ctl_counted_alloc(NULL, 0);
     Crray *plane = ctl_crray_alloc(4);
-    Crray *stack = ctl_crray_alloc(4);
-    ctl_crray_push(stack, (CtlAbs *)plane);
-    int is_definition = 0;
+    ctl_crray_push(ctx->stack, (CtlAbs *)plane);
+
     if(p == '\0') 
         return;
     do {
         /*printf("%c\n", *p);*/
-        if(state == QRT_OUT){
+        if(ctx->state == QRT_OUT){
             if(*p == ':'){
                 /*printf("entering symbol: %c\n", *p);*/
                 /*state = QRT_SYMBOL;*/
-                is_definition = 1;
-                ctl_counted_push(shelf, p, 1);
+                ctl_counted_push(ctx->shelf, p, 1);
             }else{
                 /*printf("not : %c\n", *p);*/
                 /*state = QRT_SYMBOL;*/
-                if((shelf->length == 0 && is_alpha(*p)) || is_alpha_numeric(*p)){
+                if((ctx->shelf->length == 0 && is_alpha(*p)) || is_alpha_numeric(*p)){
                     /*printf("push : %c\n", *p);*/
-                    ctl_counted_push(shelf, p, 1);
-                }else if(shelf->length > 0){
+                    ctl_counted_push(ctx->shelf, p, 1);
+                }else if(ctx->shelf->length > 0){
                     /*printf("finalize : %c\n", *p);*/
-                    emit_token(shelf); 
-                    shelf = ctl_counted_alloc(NULL, 0);
-                    state = QRT_OUT;
+                    emit_token(ctx, ctx->shelf); 
+                    ctx->shelf = ctl_counted_alloc(NULL, 0);
+                    ctx->state = QRT_OUT;
                     if(is_cmp(*p)){
-                        emit_token(ctl_counted_alloc(p, 1));
+                        emit_token(ctx, ctl_counted_alloc(p, 1));
                     }
                 }
             }
