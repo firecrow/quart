@@ -123,14 +123,34 @@ struct qrt_ctx {
     Crray *stack;
     enum qrt_types  state;
     struct qrt_node *start;
+    struct qrt_node *next;
 };
+
+struct qrt_value {
+    enum qrt_types type;
+    void (*exec)(struct qrt_ctx *, struct qrt_node *);
+    int intval;
+    char *strval;
+    /* block stuff here */
+};
+
+struct qrt_value *qrt_value_alloc(enum qrt_types type){
+    struct qrt_value *value;
+    ctl_xptr(value = malloc(sizeof(struct qrt_value)));
+    bzero(value, sizeof(struct qrt_value));
+    value->type = type;
+    return value;
+}
 
 struct qrt_node {
     enum qrt_types type;
-    enum qrt_types value_type;
     enum qrt_types operator_type;
+    enum token_types token_type;;
     CtlCounted *symbol;
     void (*exec)(struct qrt_ctx *, struct qrt_node *);
+    struct qrt_value *value;
+    struct qrt_node *next;
+    struct qrt_node *previous;
 };
 
 struct qrt_node *qrt_node_alloc(enum qrt_types type){
@@ -150,12 +170,26 @@ struct qrt_ctx * qrt_ctx_alloc(){
     ctx->namespace = ctl_tree_alloc(ctl_tree_crownumber_int_cmp);
     ctx->start = qrt_node_alloc(QRT_NODE); 
     ctx->stack = ctl_crray_alloc(16); 
+    ctx->next = qrt_node_alloc(QRT_NODE);
     return ctx;
 }
 
-CtlCounted  *emit_token(struct qrt_ctx *ctx, CtlCounted *name){
+void emit_token(struct qrt_ctx *ctx, CtlCounted *name){
     printf("token(%d):%s\n", identify_token(name), ctl_counted_to_cstr(name));
-    return name;
+    struct qrt_node *current = ctx->next;
+
+    struct qrt_node *node = qrt_node_alloc(QRT_NODE);
+    enum token_types token_type = identify_token(name);
+    if(token_type == QRT_TOKEN_DECLARE_SYMBOL){
+        node->symbol = name;
+    }else if(ctx->next->token_type == QRT_TOKEN_DECLARE_SYMBOL && token_type == QRT_TOKEN_INT){
+        struct qrt_value *value = qrt_value_alloc(token_type);
+        value->intval = atoi(ctl_counted_to_cstr(name));
+        node->value = value;
+    }
+    node->previous = current;
+    current->next = node;
+    ctx->next = node;
 }
 
 void parse(char *source){
