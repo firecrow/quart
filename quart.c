@@ -143,6 +143,7 @@ struct qrt_value *qrt_value_alloc(enum qrt_types type){
 }
 
 struct qrt_node {
+    int id;
     enum qrt_types type;
     enum qrt_types operator_type;
     enum token_types token_type;;
@@ -153,11 +154,13 @@ struct qrt_node {
     struct qrt_node *previous;
 };
 
+int qrt_node_id=0;
 struct qrt_node *qrt_node_alloc(enum qrt_types type){
     struct qrt_node *node;
     ctl_xptr(node = malloc(sizeof(struct qrt_node)));
     bzero(node, sizeof(struct qrt_node));
     node->type = type;
+    node->id = ++qrt_node_id;
     return node;
 }
 
@@ -170,7 +173,7 @@ struct qrt_ctx * qrt_ctx_alloc(){
     ctx->namespace = ctl_tree_alloc(ctl_tree_crownumber_int_cmp);
     ctx->start = qrt_node_alloc(QRT_NODE); 
     ctx->stack = ctl_crray_alloc(16); 
-    ctx->next = qrt_node_alloc(QRT_NODE);
+    ctx->next = ctx->start = qrt_node_alloc(QRT_NODE);
     return ctx;
 }
 
@@ -185,14 +188,15 @@ void emit_token(struct qrt_ctx *ctx, CtlCounted *name){
     }else if(ctx->next->token_type == QRT_TOKEN_DECLARE_SYMBOL && token_type == QRT_TOKEN_INT){
         struct qrt_value *value = qrt_value_alloc(token_type);
         value->intval = atoi(ctl_counted_to_cstr(name));
-        node->value = value;
+        current->value = value;
     }
+    node->token_type = token_type;
     node->previous = current;
     current->next = node;
     ctx->next = node;
 }
 
-void parse(char *source){
+struct qrt_ctx *parse(char *source){
     char *p = source;
     struct qrt_ctx *ctx = qrt_ctx_alloc();
     ctx->state = QRT_OUT;
@@ -201,7 +205,7 @@ void parse(char *source){
     ctl_crray_push(ctx->stack, (CtlAbs *)plane);
 
     if(p == '\0') 
-        return;
+        return NULL;
     do {
         /*printf("%c\n", *p);*/
         if(ctx->state == QRT_OUT){
@@ -227,10 +231,25 @@ void parse(char *source){
             }
         }
     }while(*++p != '\0');
+    return ctx;
+}
+
+void print_node(struct qrt_node *node){
+    char *symbol_str = node->symbol != NULL ? ctl_counted_to_cstr(node->symbol) : "";
+    int next_id = node->next != NULL ? node->next->id  : -1;
+    int prev_id = node->previous != NULL ? node->previous->id  : -1;
+    int value = node->value != NULL ? node->value->intval : 0;
+    printf("<NODE id:%d type:%d tokent:%d symbol:'%s' execnull?:%d next:%d prev:%d intvalue:%d>\n",
+        node->id, node->type, node->token_type,symbol_str, node->exec == NULL, next_id, prev_id,value 
+    );
 }
 
 int main(){
     char *source = ":y 3\n :run {\n write y\n write x*2 \n}\n :z = run :x 5 ";
     printf("source\n%s\n---------------\n", source);
-    parse(source);
+    struct qrt_ctx *ctx = parse(source);
+    struct qrt_node *node = ctx->start;
+    do {
+        print_node(node);
+    }while((node = node->next));
 }
