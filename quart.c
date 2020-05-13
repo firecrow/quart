@@ -29,21 +29,11 @@ int is_alpha_numeric(char c){
     return is_numeric(c) || is_alpha(c);
 }
 
-enum token_types {
-    QRT_TOKEN_INVALID = -1,
-    QRT_TOKEN_NULL = 0,
-    QRT_TOKEN_INT,
-    QRT_TOKEN_SYMBOL,
-    QRT_TOKEN_DECLARE_SYMBOL,
-    QRT_TOKEN_STRING,
-    QRT_TOKEN_CMP,
-    QRT_TOKEN_BLOCK
-};
-
 enum qrt_types {
     /* node types */
+    QRT_INVALID = -1,
     QRT_UNKNOWN = 0,
-    QRT_NODE = 1,
+    QRT_NODE,
     QRT_VALUE,
     QRT_OPERATR,
     QRT_BLOCK,
@@ -63,11 +53,23 @@ enum qrt_types {
     QRT_LIS,
     /* parse states */
     QRT_OUT,
-    QRT_SYMBOL
+    QRT_SYMBOL,
+    /* token types */
+    QRT_TOKEN_NULL,
+    QRT_TOKEN_INT,
+    QRT_TOKEN_SYMBOL,
+    QRT_TOKEN_DECLARE_SYMBOL,
+    QRT_TOKEN_STRING,
+    QRT_TOKEN_CMP,
+    QRT_TOKEN_BLOCK
 };
 
 
-enum token_types identify_token(CtlCounted *token){
+int is_between_opp_type(int type){
+    return type != QRT_NOT;
+}
+
+enum qrt_types identify_token(CtlCounted *token){
     int i = 0;
     char c; 
     int class = QRT_TOKEN_NULL;
@@ -87,7 +89,7 @@ enum token_types identify_token(CtlCounted *token){
             if(c == '"'){
                 class = QRT_TOKEN_STRING;
                 if(token->data[token->length-1] != '"')
-                    return QRT_TOKEN_INVALID;
+                    return QRT_INVALID;
                 continue;
             }
             if(is_cmp(c)){
@@ -97,18 +99,18 @@ enum token_types identify_token(CtlCounted *token){
         /*printf("%c %d\n", c, class);*/
         if(class == QRT_TOKEN_INT){
             if(!is_numeric(c)){
-                return QRT_TOKEN_INVALID;
+                return QRT_INVALID;
             }
         }
         if(class == QRT_TOKEN_SYMBOL || class == QRT_TOKEN_DECLARE_SYMBOL){
             if(!is_alpha_numeric(c)){
-                return QRT_TOKEN_INVALID;
+                return QRT_INVALID;
             }
         }
         if(class == QRT_TOKEN_STRING){
             if(c == '"' && token->data[i-1] != '\\' && i != token->length-1)
                 continue;
-            return QRT_TOKEN_INVALID;
+            return QRT_INVALID;
 
         }
     }
@@ -124,6 +126,7 @@ struct qrt_ctx {
     enum qrt_types  state;
     struct qrt_node *start;
     struct qrt_node *next;
+    struct qrt_node *reg;
 };
 
 struct qrt_value {
@@ -145,10 +148,10 @@ struct qrt_value *qrt_value_alloc(enum qrt_types type){
 struct qrt_node {
     int id;
     enum qrt_types type;
-    enum qrt_types operator_type;
-    enum token_types token_type;;
+    enum qrt_types opp_type;
+    enum qrt_types token_type;;
     CtlCounted *symbol;
-    void (*exec)(struct qrt_ctx *, struct qrt_node *);
+    struct qrt_node *(*call)(struct qrt_node *opp, struct qrt_node *a, struct qrt_node *b);
     struct qrt_value *value;
     struct qrt_node *next;
     struct qrt_node *previous;
@@ -177,18 +180,62 @@ struct qrt_ctx * qrt_ctx_alloc(){
     return ctx;
 }
 
+
+
+typedef struct qrt_node *(*between_opp_call)(struct qrt_node *opp, struct qrt_node *a, struct qrt_node *b);
+
+struct qrt_node *multiply_call(struct qrt_node *opp, struct qrt_node *a, struct qrt_node *b){
+    struct qrt_node *node = qrt_node_alloc(QRT_NODE);
+    if(a->type != QRT_INT || b->type != QRT_INT){ 
+        node->type = QRT_INVALID; 
+    }else{
+        struct qrt_value *value = qrt_value_alloc(QRT_TOKEN_INT);
+        value->intval = a->value->intval * b->value->intval;
+        node->value = value;
+    }
+    return node;
+}
+
 void emit_token(struct qrt_ctx *ctx, CtlCounted *name){
     printf("token(%d):%s\n", identify_token(name), ctl_counted_to_cstr(name));
     struct qrt_node *current = ctx->next;
 
     struct qrt_node *node = qrt_node_alloc(QRT_NODE);
-    enum token_types token_type = identify_token(name);
-    if(token_type == QRT_TOKEN_DECLARE_SYMBOL){
+    enum qrt_types token_type = identify_token(name);
+    if(token_type == QRT_TOKEN_CMP){
+        node->symbol = name;
+        switch(name->data[0]){
+            case '+':
+               node->opp_type = QRT_PLUS;
+               break;
+            case '-':
+               node->opp_type = QRT_MINUS;
+               break;
+            case '/':
+               node->opp_type = QRT_DIVIDE;
+               break;
+            case '*':
+               node->opp_type = QRT_MULTIPLY;
+               node->call = multiply_call;
+               break;
+            case '>': 
+               node->opp_type = QRT_GREATER;
+               break;
+            case '<': 
+               node->opp_type = QRT_LESS;
+               break;
+            case '!': 
+               node->opp_type = QRT_NOT;
+               break;
+        }
+    }
+    if(token_type == QRT_TOKEN_DECLARE_SYMBOL || token_type == QRT_TOKEN_SYMBOL){
         node->symbol = name;
     }else if(ctx->next->token_type == QRT_TOKEN_DECLARE_SYMBOL && token_type == QRT_TOKEN_INT){
         struct qrt_value *value = qrt_value_alloc(token_type);
         value->intval = atoi(ctl_counted_to_cstr(name));
         current->value = value;
+        current->type = QRT_INT;
     }
     node->token_type = token_type;
     node->previous = current;
@@ -239,8 +286,8 @@ void print_node(struct qrt_node *node){
     int next_id = node->next != NULL ? node->next->id  : -1;
     int prev_id = node->previous != NULL ? node->previous->id  : -1;
     int value = node->value != NULL ? node->value->intval : 0;
-    printf("<NODE id:%d type:%d tokent:%d symbol:'%s' execnull?:%d next:%d prev:%d intvalue:%d>\n",
-        node->id, node->type, node->token_type,symbol_str, node->exec == NULL, next_id, prev_id,value 
+    printf("<NODE id:%d type:%d tokent:%d oppt:%d symbol:'%s' exec?:%d val?:%d next:%d prev:%d intvalue:%d>\n",
+        node->id, node->type, node->token_type,node->opp_type, symbol_str, node->call != NULL, node->value != NULL, next_id, prev_id,value 
     );
 }
 
@@ -251,5 +298,12 @@ int main(){
     struct qrt_node *node = ctx->start;
     do {
         print_node(node);
+        if(node->opp_type){
+            if(is_between_opp_type(node->opp_type)){
+                ctx->reg = node->call(node, node->previous, node->next); 
+                print_node(node);
+                print_node(ctx->reg);
+            }
+        }
     }while((node = node->next));
 }
