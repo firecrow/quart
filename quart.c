@@ -180,8 +180,6 @@ struct qrt_ctx * qrt_ctx_alloc(){
     return ctx;
 }
 
-
-
 typedef struct qrt_node *(*between_opp_call)(struct qrt_node *opp, struct qrt_node *a, struct qrt_node *b);
 
 struct qrt_node *multiply_call(struct qrt_node *opp, struct qrt_node *a, struct qrt_node *b){
@@ -231,11 +229,19 @@ void emit_token(struct qrt_ctx *ctx, CtlCounted *name){
     }
     if(token_type == QRT_TOKEN_DECLARE_SYMBOL || token_type == QRT_TOKEN_SYMBOL){
         node->symbol = name;
+        if(token_type == QRT_TOKEN_DECLARE_SYMBOL){
+            ctl_tree_insert(ctx->namespace, (CtlAbs *)name, (CtlAbs *)node);
+        }
     }else if(ctx->next->token_type == QRT_TOKEN_DECLARE_SYMBOL && token_type == QRT_TOKEN_INT){
         struct qrt_value *value = qrt_value_alloc(token_type);
         value->intval = atoi(ctl_counted_to_cstr(name));
         current->value = value;
         current->type = QRT_INT;
+    }else if(token_type == QRT_TOKEN_INT){
+        struct qrt_value *value = qrt_value_alloc(token_type);
+        value->intval = atoi(ctl_counted_to_cstr(name));
+        node->value = value;
+        node->type = QRT_INT;
     }
     node->token_type = token_type;
     node->previous = current;
@@ -292,7 +298,7 @@ void print_node(struct qrt_node *node){
 }
 
 int main(){
-    char *source = ":y 3\n :run {\n write y\n write x*2 \n}\n :z = run :x 5 ";
+    char *source = ":y 3\n :run {\n write y\n write x * 2 \n}\n :z = run :x 5 ";
     printf("source\n%s\n---------------\n", source);
     struct qrt_ctx *ctx = parse(source);
     struct qrt_node *node = ctx->start;
@@ -301,8 +307,6 @@ int main(){
         if(node->opp_type){
             if(is_between_opp_type(node->opp_type)){
                 ctx->reg = node->call(node, node->previous, node->next); 
-                print_node(node);
-                print_node(ctx->reg);
             }
         }
     }while((node = node->next));
