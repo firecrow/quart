@@ -2,12 +2,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#include "../crowtils/crowx/crowx.c"
-#include "../crowtils/poly/poly.c"
-#include "../crowtils/counted/counted.c"
-#include "../crowtils/crownumber/crownumber.c"
-#include "../crowtils/crray/crray.c"
-#include "../crowtils/crowtree/tree.c"
+#include "../crowtils/crowx.c"
+#include "../crowtils/poly.c"
+#include "../crowtils/counted.c"
+#include "../crowtils/crownumber.c"
+#include "../crowtils/crray.c"
+#include "../crowtils/tree.c"
 
 enum parse_states {
     QRT_OUT = 0,
@@ -97,6 +97,24 @@ enum token_types identify_token(CtlCounted *token){
     return class;
 }
 
+struct qrt_ctx {
+    int id;
+    CtlTree *namespace;
+    struct qrt_ctx *parent;
+    CtlCounted *shelf;
+    Crray stack;
+};
+
+int qrt_ctx_id = 0;
+struct qrt_ctx * qrt_ctx_alloc(){
+    struct qrt_ctx *ctx;
+    ctl_xptr(ctx = malloc(sizeof(struct qrt_ctx)));
+    bzero(ctx, sizeof(struct qrt_ctx));
+    ctx->id = ++qrt_ctx_id;
+    ctx->namespace = ctl_tree_alloc(ctl_tree_crownumber_int_cmp);
+    return ctx;
+}
+
 CtlCounted  *emit_token(CtlCounted *name){
     printf("token(%d):%s\n", identify_token(name), ctl_counted_to_cstr(name));
     return name;
@@ -109,9 +127,12 @@ CtlCounted  *emit_value(CtlCounted *token, CtlCounted *value){
 
 void parse(char *source){
     char *p = source;
+    struct qrt_ctx *ctx = qrt_ctx_alloc();
     enum parse_states state = QRT_OUT;
     CtlCounted *shelf = ctl_counted_alloc(NULL, 0);
-    CtlCounted *token = ctl_counted_alloc(NULL, 0);
+    Crray *plane = ctl_crray_alloc(4);
+    Crray *stack = ctl_crray_alloc(4);
+    ctl_crray_push(stack, (CtlAbs *)plane);
     int is_definition = 0;
     if(p == '\0') 
         return;
@@ -131,11 +152,11 @@ void parse(char *source){
                     ctl_counted_push(shelf, p, 1);
                 }else if(shelf->length > 0){
                     /*printf("finalize : %c\n", *p);*/
-                    token = emit_token(shelf); 
+                    emit_token(shelf); 
                     shelf = ctl_counted_alloc(NULL, 0);
                     state = QRT_OUT;
                     if(is_cmp(*p)){
-                        token = emit_token(ctl_counted_alloc(p, 1));
+                        emit_token(ctl_counted_alloc(p, 1));
                     }
                 }
             }
