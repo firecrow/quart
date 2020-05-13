@@ -9,15 +9,6 @@
 #include "../crowtils/crray.c"
 #include "../crowtils/tree.c"
 
-enum parse_states {
-    QRT_OUT = 0,
-    QRT_SYMBOL,
-    QRT_PRE_VALUE,
-    QRT_VALUE,
-    QRT_STRING,
-    QRT_INT
-};
-
 int is_punc(char c){
     return (c == ';' || c == ',' || c == '<' || c == '>' || c == '=' || c == '{' || c == '}' || c == '[' || c == ']');
 }
@@ -48,6 +39,33 @@ enum token_types {
     QRT_TOKEN_CMP,
     QRT_TOKEN_BLOCK
 };
+
+enum qrt_types {
+    /* node types */
+    QRT_UNKNOWN = 0,
+    QRT_NODE = 1,
+    QRT_VALUE,
+    QRT_OPERATR,
+    QRT_BLOCK,
+    /*operator_types*/
+    QRT_PLUS,
+    QRT_MINUS,
+    QRT_DIVIDE,
+    QRT_MULTIPLY,
+    QRT_GREATER,
+    QRT_LESS,
+    QRT_NOT,
+    /*value_types*/
+    QRT_INT,
+    QRT_STRING,
+    QRT_BOOLEAN,
+    QRT_TREE,
+    QRT_LIS,
+    /* parse states */
+    QRT_OUT,
+    QRT_SYMBOL
+};
+
 
 enum token_types identify_token(CtlCounted *token){
     int i = 0;
@@ -103,8 +121,25 @@ struct qrt_ctx {
     struct qrt_ctx *parent;
     CtlCounted *shelf;
     Crray *stack;
-    enum parse_states  state;
+    enum qrt_types  state;
+    struct qrt_node *start;
 };
+
+struct qrt_node {
+    enum qrt_types type;
+    enum qrt_types value_type;
+    enum qrt_types operator_type;
+    CtlCounted *symbol;
+    void (*exec)(struct qrt_ctx *, struct qrt_node *);
+};
+
+struct qrt_node *qrt_node_alloc(enum qrt_types type){
+    struct qrt_node *node;
+    ctl_xptr(node = malloc(sizeof(struct qrt_node)));
+    bzero(node, sizeof(struct qrt_node));
+    node->type = type;
+    return node;
+}
 
 int qrt_ctx_id = 0;
 struct qrt_ctx * qrt_ctx_alloc(){
@@ -113,6 +148,7 @@ struct qrt_ctx * qrt_ctx_alloc(){
     bzero(ctx, sizeof(struct qrt_ctx));
     ctx->id = ++qrt_ctx_id;
     ctx->namespace = ctl_tree_alloc(ctl_tree_crownumber_int_cmp);
+    ctx->start = qrt_node_alloc(QRT_NODE); 
     ctx->stack = ctl_crray_alloc(16); 
     return ctx;
 }
