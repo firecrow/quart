@@ -298,7 +298,7 @@ void print_node(struct qrt_node *node){
 }
 
 int main(){
-    char *source = ":y 3\n :run {\n write y\n write x * 2 \n}\n :z = run :x 5 ";
+    char *source = ":y 3\n :run {\n write y\n write x*2 \n}\n :z = run :x 5 ";
     printf("source\n%s\n---------------\n", source);
     struct qrt_ctx *ctx = parse(source);
     struct qrt_node *node = ctx->start;
