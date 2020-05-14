@@ -59,6 +59,7 @@ typedef struct qrt_cell {
     int id;
     CtlAbs *value;
     struct qrt_cell *next;
+    struct qrt_cell *previous;
 } CtlCell;
 
 typedef struct qrt_opp {
@@ -203,27 +204,15 @@ void emit_token(struct qrt_ctx *ctx, CtlCounted *name){
         if(symbol->is_define){
             ctl_tree_insert(ctx->namespace, (CtlAbs *)name, (CtlAbs *)symbol);
         }
-    }else if(ctx->next->base.class == CLASS_DEFINE && token_type == CLASS_INT){
-        /*
-        CtlAbs *value = qrt_value_alloc(token_type);
-        value->intval = atoi(ctl_counted_to_cstr(name));
-        current->value = value;
-        current->type = CLASS_INT;
-        */
+    }else if(current->base.class == CLASS_SYMBOL && token_type == CLASS_INT){
+        QrtSymbol *symbol = (QrtSymbol *)current->value;
+        symbol->value = (CtlAbs *)ctl_int_alloc(atoi(ctl_counted_to_cstr(name)));
     }else if(token_type == CLASS_INT){
-        /* 
-        CtlAbs *value = qrt_value_alloc(token_type);
-        value->intval = atoi(ctl_counted_to_cstr(name));
-        node->value = value;
-        node->type = CLASS_INT;
-        */
+        current->value = (CtlAbs *)ctl_int_alloc(atoi(ctl_counted_to_cstr(name)));
     }
-    /*
-    node->token_type = token_type;
     node->previous = current;
     current->next = node;
     ctx->next = node;
-        */
 }
 
 struct qrt_ctx *parse(char *source){
