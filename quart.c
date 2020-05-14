@@ -67,6 +67,13 @@ typedef struct qrt_opp {
     struct qrt_cell *(*call)(struct qrt_opp *opp, CtlAbs *a, CtlAbs *b);
 } QrtOpp;
 
+typedef struct qrt_symbol {
+   struct base base;
+   CtlCell *parent;
+   CtlCounted *name;
+   CtlAbs *value;
+   int is_define;
+} QrtSymbol;
 
 int qrt_opp_id=0;
 QrtOpp *qrt_opp_alloc(char type){
@@ -79,6 +86,17 @@ QrtOpp *qrt_opp_alloc(char type){
     return opp;
 }
 
+int qrt_symbol_id=0;
+QrtSymbol *qrt_symbol_alloc(CtlCell *parent, int is_define){
+    QrtSymbol *symbol;
+    ctl_xptr(symbol = malloc(sizeof(QrtSymbol)));
+    bzero(symbol, sizeof(QrtSymbol));
+    symbol->base.class = CLASS_SYMBOL;
+    symbol->base.id = ++qrt_symbol_id;
+    symbol->is_define = is_define;
+    symbol->parent = parent;
+    return symbol;
+}
 
 int qrt_cell_id=0;
 struct qrt_cell *qrt_cell_alloc(){
@@ -179,9 +197,12 @@ void emit_token(struct qrt_ctx *ctx, CtlCounted *name){
     }
     /*
     if(token_type == CLASS_DEFINE || token_type == CLASS_SYMBOL){
-        node->symbol = name;
-        if(token_type == CLASS_DEFINE){
-            ctl_tree_insert(ctx->namespace, (CtlAbs *)name, (CtlAbs *)node);
+        CtlSymbol *value = (CtlAbs *) ctl_symbol_alloc(node, token_type == CLASS_DEFINE); 
+        node->value = symbol;
+        symbol->parent = node;
+        symbol->name = name;
+        if(symbol->is_define){
+            ctl_tree_insert(ctx->namespace, (CtlAbs *)name, (CtlAbs *)symbol);
         }
     }else if(ctx->next->token_type == CLASS_DEFINE && token_type == CLASS_INT){
         CtlAbs *value = qrt_value_alloc(token_type);
@@ -198,7 +219,7 @@ void emit_token(struct qrt_ctx *ctx, CtlCounted *name){
     node->previous = current;
     current->next = node;
     ctx->next = node;
-    */
+        */
 }
 
 struct qrt_ctx *parse(char *source){
