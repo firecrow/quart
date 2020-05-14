@@ -195,26 +195,30 @@ void emit_token(struct qrt_ctx *ctx, CtlCounted *name){
                break;
         }
     }
-    /*
     if(token_type == CLASS_DEFINE || token_type == CLASS_SYMBOL){
-        CtlSymbol *value = (CtlAbs *) ctl_symbol_alloc(node, token_type == CLASS_DEFINE); 
-        node->value = symbol;
+        QrtSymbol *symbol = qrt_symbol_alloc(node, token_type == CLASS_DEFINE); 
+        node->value = (CtlAbs *)symbol;
         symbol->parent = node;
         symbol->name = name;
         if(symbol->is_define){
             ctl_tree_insert(ctx->namespace, (CtlAbs *)name, (CtlAbs *)symbol);
         }
-    }else if(ctx->next->token_type == CLASS_DEFINE && token_type == CLASS_INT){
+    }else if(ctx->next->base.class == CLASS_DEFINE && token_type == CLASS_INT){
+        /*
         CtlAbs *value = qrt_value_alloc(token_type);
         value->intval = atoi(ctl_counted_to_cstr(name));
         current->value = value;
         current->type = CLASS_INT;
+        */
     }else if(token_type == CLASS_INT){
+        /* 
         CtlAbs *value = qrt_value_alloc(token_type);
         value->intval = atoi(ctl_counted_to_cstr(name));
         node->value = value;
         node->type = CLASS_INT;
+        */
     }
+    /*
     node->token_type = token_type;
     node->previous = current;
     current->next = node;
