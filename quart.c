@@ -29,39 +29,19 @@ int is_alpha_numeric(char c){
     return is_numeric(c) || is_alpha(c);
 }
 
-enum qrt_types {
-    /* node types */
-    QRT_UNKNOWN = 0,
-    QRT_NODE,
-    QRT_VALUE,
-    QRT_OPERATR,
-    QRT_BLOCK,
-    /*operator_types*/
-    QRT_PLUS,
-    QRT_MINUS,
-    QRT_DIVIDE,
-    QRT_MULTIPLY,
-    QRT_GREATER,
-    QRT_LESS,
-    QRT_NOT,
-    /*value_types*/
-    QRT_INT,
-    QRT_STRING,
-    QRT_BOOLEAN,
-    QRT_TREE,
-    QRT_LIS,
-    /* parse states */
-    QRT_OUT,
-    QRT_SYMBOL,
-    /* token types */
-    QRT_TOKEN_NULL,
-    QRT_TOKEN_INT,
-    QRT_TOKEN_SYMBOL,
-    QRT_TOKEN_DECLARE_SYMBOL,
-    QRT_TOKEN_STRING,
-    QRT_TOKEN_CMP,
-    QRT_TOKEN_BLOCK
+enum qrt_opp_types {
+    QRT_PLUS = '+',
+    QRT_MINUS = '-',
+    QRT_DIVIDE = '/',
+    QRT_MULTIPLY = '*',
+    QRT_GREATER = '>',
+    QRT_LESS = '>',
+    QRT_NOT = '!'
 };
+
+int is_between_opp_type(char type){
+    return type != QRT_NOT;
+}
 
 struct qrt_ctx {
     int id;
@@ -69,14 +49,13 @@ struct qrt_ctx {
     struct qrt_ctx *parent;
     CtlCounted *shelf;
     Crray *stack;
-    enum qrt_types  state;
     struct qrt_node *start;
     struct qrt_node *next;
     struct qrt_node *reg;
 };
 
 struct qrt_value {
-    enum qrt_types type;
+    enum classes type;
     void (*exec)(struct qrt_ctx *, struct qrt_node *);
     int intval;
     char *strval;
@@ -85,9 +64,9 @@ struct qrt_value {
 
 struct qrt_node {
     int id;
-    enum qrt_types type;
-    enum qrt_types opp_type;
-    enum qrt_types token_type;;
+    enum classes type;
+    char opp_type;
+    enum classes token_type;;
     CtlCounted *symbol;
     struct qrt_node *(*call)(struct qrt_node *opp, struct qrt_node *a, struct qrt_node *b);
     struct qrt_value *value;
@@ -95,7 +74,7 @@ struct qrt_node {
     struct qrt_node *previous;
 };
 
-struct qrt_value *qrt_value_alloc(enum qrt_types type){
+struct qrt_value *qrt_value_alloc(enum classes type){
     struct qrt_value *value;
     ctl_xptr(value = malloc(sizeof(struct qrt_value)));
     bzero(value, sizeof(struct qrt_value));
@@ -104,7 +83,7 @@ struct qrt_value *qrt_value_alloc(enum qrt_types type){
 }
 
 int qrt_node_id=0;
-struct qrt_node *qrt_node_alloc(enum qrt_types type){
+struct qrt_node *qrt_node_alloc(enum classes type){
     struct qrt_node *node;
     ctl_xptr(node = malloc(sizeof(struct qrt_node)));
     bzero(node, sizeof(struct qrt_node));
@@ -126,11 +105,7 @@ struct qrt_ctx * qrt_ctx_alloc(){
     return ctx;
 }
 
-int is_between_opp_type(int type){
-    return type != QRT_NOT;
-}
-
-enum qrt_types identify_token(CtlCounted *token){
+enum classes identify_token(CtlCounted *token){
     int i = 0;
     char c; 
     int class = CLASS_NULL;
@@ -197,31 +172,13 @@ void emit_token(struct qrt_ctx *ctx, CtlCounted *name){
     struct qrt_node *current = ctx->next;
 
     struct qrt_node *node = qrt_node_alloc(CLASS_CELL);
-    enum qrt_types token_type = identify_token(name);
+    enum classes token_type = identify_token(name);
     if(token_type == CLASS_OPP){
         node->symbol = name;
-        switch(name->data[0]){
-            case '+':
-               node->opp_type = QRT_PLUS;
-               break;
-            case '-':
-               node->opp_type = QRT_MINUS;
-               break;
-            case '/':
-               node->opp_type = QRT_DIVIDE;
-               break;
-            case '*':
-               node->opp_type = QRT_MULTIPLY;
+        node->opp_type = name->data[0];
+        switch(node->opp_type){
+            case QRT_MULTIPLY:
                node->call = multiply_call;
-               break;
-            case '>': 
-               node->opp_type = QRT_GREATER;
-               break;
-            case '<': 
-               node->opp_type = QRT_LESS;
-               break;
-            case '!': 
-               node->opp_type = QRT_NOT;
                break;
         }
     }
