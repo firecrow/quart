@@ -245,15 +245,26 @@ struct qrt_ctx *parse(char *source){
 }
 
 void print_node(struct qrt_cell *node){
-    /*
-    char *symbol_str = node->symbol != NULL ? ctl_counted_to_cstr(node->symbol) : "";
-    int next_id = node->next != NULL ? node->next->id  : -1;
-    int prev_id = node->previous != NULL ? node->previous->id  : -1;
-    int value = node->value != NULL ? node->value->intval : 0;
-    printf("<NODE id:%d type:%d tokent:%d oppt:%d symbol:'%s' exec?:%d val?:%d next:%d prev:%d intvalue:%d>\n",
-        node->id, node->type, node->token_type,node->opp_type, symbol_str, node->call != NULL, node->value != NULL, next_id, prev_id,value 
+    char *node_value = "";
+    int next_id = node->next != NULL ? node->next->base.id  : -1;
+    int prev_id = node->previous != NULL ? node->previous->base.id  : -1;
+    if(node->value){
+        if(node->value->base.class == CLASS_INT){
+            node_value = ctl_counted_to_cstr(ctl_counted_format("%d", ((CtlInt *)node->value)->value));
+        }else if(node->value->base.class == CLASS_SYMBOL){
+            QrtSymbol *symbol = node->value;
+            node_value = ctl_counted_to_cstr(symbol->name);
+            if(symbol->value){
+                CtlAbs *value = symbol->value;
+                if(value->base.class == CLASS_INT){
+                    node_value = ctl_counted_to_cstr(ctl_counted_format("%s %d", node_value, ((CtlInt *)value)->value));
+                }
+            }
+        }
+    }
+    printf("<NODE id:%d class:%d value:%s next:%d prev:%d>\n",
+        node->base.id, node->base.class, node_value, next_id, prev_id
     );
-    */
 }
 
 int main(){
