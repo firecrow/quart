@@ -31,7 +31,6 @@ int is_alpha_numeric(char c){
 
 enum qrt_types {
     /* node types */
-    QRT_INVALID = -1,
     QRT_UNKNOWN = 0,
     QRT_NODE,
     QRT_VALUE,
@@ -64,59 +63,6 @@ enum qrt_types {
     QRT_TOKEN_BLOCK
 };
 
-
-int is_between_opp_type(int type){
-    return type != QRT_NOT;
-}
-
-enum qrt_types identify_token(CtlCounted *token){
-    int i = 0;
-    char c; 
-    int class = QRT_TOKEN_NULL;
-    for(int i = 0; i < token->length; i++){
-        c = token->data[i]; 
-        if(i == 0){
-            if(is_numeric(c)){
-                class = QRT_TOKEN_INT;
-            } 
-            if(is_alpha(c)){
-                class = QRT_TOKEN_SYMBOL;
-            }
-            if(c == ':'){
-                class = QRT_TOKEN_DECLARE_SYMBOL;
-                continue;
-            }
-            if(c == '"'){
-                class = QRT_TOKEN_STRING;
-                if(token->data[token->length-1] != '"')
-                    return QRT_INVALID;
-                continue;
-            }
-            if(is_cmp(c)){
-                return QRT_TOKEN_CMP;
-            } 
-        }
-        /*printf("%c %d\n", c, class);*/
-        if(class == QRT_TOKEN_INT){
-            if(!is_numeric(c)){
-                return QRT_INVALID;
-            }
-        }
-        if(class == QRT_TOKEN_SYMBOL || class == QRT_TOKEN_DECLARE_SYMBOL){
-            if(!is_alpha_numeric(c)){
-                return QRT_INVALID;
-            }
-        }
-        if(class == QRT_TOKEN_STRING){
-            if(c == '"' && token->data[i-1] != '\\' && i != token->length-1)
-                continue;
-            return QRT_INVALID;
-
-        }
-    }
-    return class;
-}
-
 struct qrt_ctx {
     int id;
     CtlTree *namespace;
@@ -137,14 +83,6 @@ struct qrt_value {
     /* block stuff here */
 };
 
-struct qrt_value *qrt_value_alloc(enum qrt_types type){
-    struct qrt_value *value;
-    ctl_xptr(value = malloc(sizeof(struct qrt_value)));
-    bzero(value, sizeof(struct qrt_value));
-    value->type = type;
-    return value;
-}
-
 struct qrt_node {
     int id;
     enum qrt_types type;
@@ -156,6 +94,14 @@ struct qrt_node {
     struct qrt_node *next;
     struct qrt_node *previous;
 };
+
+struct qrt_value *qrt_value_alloc(enum qrt_types type){
+    struct qrt_value *value;
+    ctl_xptr(value = malloc(sizeof(struct qrt_value)));
+    bzero(value, sizeof(struct qrt_value));
+    value->type = type;
+    return value;
+}
 
 int qrt_node_id=0;
 struct qrt_node *qrt_node_alloc(enum qrt_types type){
@@ -174,20 +120,72 @@ struct qrt_ctx * qrt_ctx_alloc(){
     bzero(ctx, sizeof(struct qrt_ctx));
     ctx->id = ++qrt_ctx_id;
     ctx->namespace = ctl_tree_alloc(ctl_tree_crownumber_int_cmp);
-    ctx->start = qrt_node_alloc(QRT_NODE); 
+    ctx->start = qrt_node_alloc(CLASS_CELL); 
     ctx->stack = ctl_crray_alloc(16); 
-    ctx->next = ctx->start = qrt_node_alloc(QRT_NODE);
+    ctx->next = ctx->start = qrt_node_alloc(CLASS_CELL);
     return ctx;
+}
+
+int is_between_opp_type(int type){
+    return type != QRT_NOT;
+}
+
+enum qrt_types identify_token(CtlCounted *token){
+    int i = 0;
+    char c; 
+    int class = CLASS_NULL;
+    for(int i = 0; i < token->length; i++){
+        c = token->data[i]; 
+        if(i == 0){
+            if(is_numeric(c)){
+                class = CLASS_INT;
+            } 
+            if(is_alpha(c)){
+                class = CLASS_SYMBOL;
+            }
+            if(c == ':'){
+                class = CLASS_DEFINE;
+                continue;
+            }
+            if(c == '"'){
+                class = CLASS_COUNTED;
+                if(token->data[token->length-1] != '"')
+                    return CLASS_INVALID;
+                continue;
+            }
+            if(is_cmp(c)){
+                return CLASS_OPP;
+            } 
+        }
+        /*printf("%c %d\n", c, class);*/
+        if(class == CLASS_INT){
+            if(!is_numeric(c)){
+                return CLASS_INVALID;
+            }
+        }
+        if(class == CLASS_SYMBOL || class == CLASS_DEFINE){
+            if(!is_alpha_numeric(c)){
+                return CLASS_INVALID;
+            }
+        }
+        if(class == CLASS_COUNTED){
+            if(c == '"' && token->data[i-1] != '\\' && i != token->length-1)
+                continue;
+            return CLASS_INVALID;
+
+        }
+    }
+    return class;
 }
 
 typedef struct qrt_node *(*between_opp_call)(struct qrt_node *opp, struct qrt_node *a, struct qrt_node *b);
 
 struct qrt_node *multiply_call(struct qrt_node *opp, struct qrt_node *a, struct qrt_node *b){
-    struct qrt_node *node = qrt_node_alloc(QRT_NODE);
-    if(a->type != QRT_INT || b->type != QRT_INT){ 
-        node->type = QRT_INVALID; 
+    struct qrt_node *node = qrt_node_alloc(CLASS_CELL);
+    if(a->type != CLASS_INT || b->type != CLASS_INT){ 
+        node->type = CLASS_INVALID; 
     }else{
-        struct qrt_value *value = qrt_value_alloc(QRT_TOKEN_INT);
+        struct qrt_value *value = qrt_value_alloc(CLASS_INT);
         value->intval = a->value->intval * b->value->intval;
         node->value = value;
     }
@@ -198,9 +196,9 @@ void emit_token(struct qrt_ctx *ctx, CtlCounted *name){
     printf("token(%d):%s\n", identify_token(name), ctl_counted_to_cstr(name));
     struct qrt_node *current = ctx->next;
 
-    struct qrt_node *node = qrt_node_alloc(QRT_NODE);
+    struct qrt_node *node = qrt_node_alloc(CLASS_CELL);
     enum qrt_types token_type = identify_token(name);
-    if(token_type == QRT_TOKEN_CMP){
+    if(token_type == CLASS_OPP){
         node->symbol = name;
         switch(name->data[0]){
             case '+':
@@ -227,21 +225,21 @@ void emit_token(struct qrt_ctx *ctx, CtlCounted *name){
                break;
         }
     }
-    if(token_type == QRT_TOKEN_DECLARE_SYMBOL || token_type == QRT_TOKEN_SYMBOL){
+    if(token_type == CLASS_DEFINE || token_type == CLASS_SYMBOL){
         node->symbol = name;
-        if(token_type == QRT_TOKEN_DECLARE_SYMBOL){
+        if(token_type == CLASS_DEFINE){
             ctl_tree_insert(ctx->namespace, (CtlAbs *)name, (CtlAbs *)node);
         }
-    }else if(ctx->next->token_type == QRT_TOKEN_DECLARE_SYMBOL && token_type == QRT_TOKEN_INT){
+    }else if(ctx->next->token_type == CLASS_DEFINE && token_type == CLASS_INT){
         struct qrt_value *value = qrt_value_alloc(token_type);
         value->intval = atoi(ctl_counted_to_cstr(name));
         current->value = value;
-        current->type = QRT_INT;
-    }else if(token_type == QRT_TOKEN_INT){
+        current->type = CLASS_INT;
+    }else if(token_type == CLASS_INT){
         struct qrt_value *value = qrt_value_alloc(token_type);
         value->intval = atoi(ctl_counted_to_cstr(name));
         node->value = value;
-        node->type = QRT_INT;
+        node->type = CLASS_INT;
     }
     node->token_type = token_type;
     node->previous = current;
@@ -252,7 +250,6 @@ void emit_token(struct qrt_ctx *ctx, CtlCounted *name){
 struct qrt_ctx *parse(char *source){
     char *p = source;
     struct qrt_ctx *ctx = qrt_ctx_alloc();
-    ctx->state = QRT_OUT;
     ctx->shelf = ctl_counted_alloc(NULL, 0);
     Crray *plane = ctl_crray_alloc(4);
     ctl_crray_push(ctx->stack, (CtlAbs *)plane);
@@ -261,25 +258,20 @@ struct qrt_ctx *parse(char *source){
         return NULL;
     do {
         /*printf("%c\n", *p);*/
-        if(ctx->state == QRT_OUT){
-            if(*p == ':'){
-                /*printf("entering symbol: %c\n", *p);*/
-                /*state = QRT_SYMBOL;*/
+        if(*p == ':'){
+            /*printf("entering symbol: %c\n", *p);*/
+            ctl_counted_push(ctx->shelf, p, 1);
+        }else{
+            /*printf("not : %c\n", *p);*/
+            if((ctx->shelf->length == 0 && is_alpha(*p)) || is_alpha_numeric(*p)){
+                /*printf("push : %c\n", *p);*/
                 ctl_counted_push(ctx->shelf, p, 1);
-            }else{
-                /*printf("not : %c\n", *p);*/
-                /*state = QRT_SYMBOL;*/
-                if((ctx->shelf->length == 0 && is_alpha(*p)) || is_alpha_numeric(*p)){
-                    /*printf("push : %c\n", *p);*/
-                    ctl_counted_push(ctx->shelf, p, 1);
-                }else if(ctx->shelf->length > 0){
-                    /*printf("finalize : %c\n", *p);*/
-                    emit_token(ctx, ctx->shelf); 
-                    ctx->shelf = ctl_counted_alloc(NULL, 0);
-                    ctx->state = QRT_OUT;
-                    if(is_cmp(*p)){
-                        emit_token(ctx, ctl_counted_alloc(p, 1));
-                    }
+            }else if(ctx->shelf->length > 0){
+                /*printf("finalize : %c\n", *p);*/
+                emit_token(ctx, ctx->shelf); 
+                ctx->shelf = ctl_counted_alloc(NULL, 0);
+                if(is_cmp(*p)){
+                    emit_token(ctx, ctl_counted_alloc(p, 1));
                 }
             }
         }
