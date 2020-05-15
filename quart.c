@@ -118,7 +118,6 @@ struct qrt_ctx * qrt_ctx_alloc(){
     ctx->base.class = CLASS_BLOCK;
     ctx->base.id = ++qrt_ctx_id;
     ctx->namespace = ctl_tree_alloc(ctl_tree_crownumber_int_cmp);
-    ctx->start = qrt_cell_alloc(); 
     ctx->next = ctx->start = qrt_cell_alloc();
     return ctx;
 }
@@ -266,7 +265,9 @@ void print_node(struct qrt_cell *node){
     int class = node->base.class;
     struct qrt_cell *cell = node;
     if(node->value){
-        if(node->value->base.class == CLASS_INT){
+        if(node->value->base.class == CLASS_OPP){
+            node_value = ctl_counted_to_cstr(ctl_counted_format("%c", ((QrtOpp *)node->value)->opp_type));
+        }else if(node->value->base.class == CLASS_INT){
             node_value = ctl_counted_to_cstr(ctl_counted_format("%d", ((CtlInt *)node->value)->value));
         }else if(node->value->base.class == CLASS_SYMBOL){
             QrtSymbol *symbol = (QrtSymbol *)node->value;
