@@ -17,6 +17,10 @@ int is_cmp(char c){
     return (c == '*' || c == '+' || c == '-' || c == '!' || c == '/' || c == '>' || c == '<');
 }
 
+int is_block(char c){
+    return (c == '{' || c == '}' || c == '[' || c == ']' || c == ',');
+}
+
 int is_alpha(char c){
     return (c >= 65 && c <= 90) || (c >=97 && c <= 122);
 }
@@ -230,9 +234,9 @@ struct qrt_ctx *parse(char *source){
             }else if(ctx->shelf->length > 0){
                 handle_token(ctx, ctx->shelf); 
                 ctx->shelf = ctl_counted_alloc(NULL, 0);
-                if(is_cmp(*p)){
-                    handle_token(ctx, ctl_counted_alloc(p, 1));
-                }
+            }
+            if(is_cmp(*p) || is_block(*p)){
+                handle_token(ctx, ctl_counted_alloc(p, 1));
             }
         }
     }while(*++p != '\0');
