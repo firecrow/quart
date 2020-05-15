@@ -178,7 +178,7 @@ CtlCell *multiply_call(QrtOpp *opp, CtlAbs *a, CtlAbs *b){
     if(a->base.class != CLASS_INT || b->base.class != CLASS_INT){ 
         node->status = CTL_INVALID; 
     }else{
-        ((CtlInt *)node->value)->value = ((CtlInt *)a)->value * ((CtlInt *)b)->value;
+        asCtlInt(node->value)->value = asCtlInt(a)->value * asCtlInt(b)->value;
         node->status = CTL_COMPLETE; 
     }
     return node;
@@ -272,14 +272,14 @@ void print_node(struct qrt_cell *node){
         if(node->value->base.class == CLASS_OPP){
             node_value = ctl_counted_to_cstr(ctl_counted_format("%c", ((QrtOpp *)node->value)->opp_type));
         }else if(node->value->base.class == CLASS_INT){
-            node_value = ctl_counted_to_cstr(ctl_counted_format("%d", ((CtlInt *)node->value)->value));
+            node_value = ctl_counted_to_cstr(ctl_counted_format("%d", asCtlInt(node->value)->value));
         }else if(node->value->base.class == CLASS_SYMBOL){
             QrtSymbol *symbol = (QrtSymbol *)node->value;
             node_value = ctl_counted_to_cstr(symbol->name);
             if(symbol->value){
                 CtlAbs *value = symbol->value;
                 if(value->base.class == CLASS_INT){
-                    node_value = ctl_counted_to_cstr(ctl_counted_format("%s %d", node_value, ((CtlInt *)value)->value));
+                    node_value = ctl_counted_to_cstr(ctl_counted_format("%s %d", node_value, asCtlInt(value)->value));
                 }
             }
         }
@@ -287,7 +287,7 @@ void print_node(struct qrt_cell *node){
         cell = (struct qrt_cell *)node->value;
     }
     printf("<NODE id:%2d class:%s next:%d prev:%d %s >\n",
-        node->base.id, get_class_str(cell), next_id, prev_id, node_value
+        node->base.id, get_class_str((CtlAbs *)cell), next_id, prev_id, node_value
     );
 }
 
