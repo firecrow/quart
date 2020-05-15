@@ -240,16 +240,36 @@ struct qrt_ctx *parse(char *source){
     return ctx;
 }
 
+char *get_class_str(CtlAbs *value){
+    int class = value->base.class;
+    if(class == CLASS_INT){
+        return "INT";
+    }else if(class == CLASS_COUNTED){
+        return "COUNTED";
+    }else if(class == CLASS_OPP){
+        return "OPERATOR";
+    }else if(class == CLASS_SYMBOL){
+        QrtSymbol *symbol = (QrtSymbol *)value;
+        if(symbol->is_define) return "DEFINITION";
+        else return "SYMBOL";
+        return "POO";
+    }else if(class == CLASS_CELL){
+        return "CELL";
+    }
+    return "UNKNOWN";
+}
+
 void print_node(struct qrt_cell *node){
     char *node_value = "";
     int next_id = node->next != NULL ? node->next->base.id  : -1;
     int prev_id = node->previous != NULL ? node->previous->base.id  : -1;
     int class = node->base.class;
+    struct qrt_cell *cell = node;
     if(node->value){
         if(node->value->base.class == CLASS_INT){
             node_value = ctl_counted_to_cstr(ctl_counted_format("%d", ((CtlInt *)node->value)->value));
         }else if(node->value->base.class == CLASS_SYMBOL){
-            QrtSymbol *symbol = node->value;
+            QrtSymbol *symbol = (QrtSymbol *)node->value;
             node_value = ctl_counted_to_cstr(symbol->name);
             if(symbol->value){
                 CtlAbs *value = symbol->value;
@@ -259,9 +279,10 @@ void print_node(struct qrt_cell *node){
             }
         }
         class = node->value->base.class;
+        cell = (struct qrt_cell *)node->value;
     }
-    printf("<NODE id:%d class:%d next:%d prev:%d value: %s >\n",
-        node->base.id, class, next_id, prev_id, node_value
+    printf("<NODE id:%2d class:%s next:%d prev:%d %s >\n",
+        node->base.id, get_class_str(cell), next_id, prev_id, node_value
     );
 }
 
