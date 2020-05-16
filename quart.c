@@ -22,6 +22,10 @@ int is_block(char c){
     return (c == '{' || c == '}' || c == '[' || c == ']' || c == ',');
 }
 
+int is_sep(char c){
+    return (c == ';' || c == '\n');
+}
+
 int is_alpha(char c){
     return (c >= 65 && c <= 90) || (c >=97 && c <= 122);
 }
@@ -57,7 +61,18 @@ typedef struct qrt_cell {
     struct qrt_cell *previous;
 } CtlCell;
 
+struct qrt_statement;
 typedef struct qrt_block {
+    struct base base;
+    char type;
+    CtlTree *namespace;
+    CtlTree *values;
+    struct qrt_block *parent;
+    struct qrt_statement *root;
+    struct qrt_statement *next;
+} QrtBlock;
+
+typedef struct qrt_statement {
     struct base base;
     char type;
     CtlTree *namespace;
@@ -65,7 +80,7 @@ typedef struct qrt_block {
     struct qrt_block *parent;
     CtlCell *root;
     CtlCell *next;
-} QrtBlock;
+} QrtStatement;
 
 struct qrt_ctx {
     struct base base;
@@ -87,6 +102,18 @@ typedef struct qrt_symbol {
    CtlAbs *value;
    int is_define;
 } QrtSymbol;
+
+typedef struct qrt_sep {
+   struct base base;
+} QrtSep;
+
+QrtSep *qrt_sep_alloc(){
+    QrtSep *sep;
+    ctl_xptr(sep = malloc(sizeof(QrtSep)));
+    bzero(sep, sizeof(QrtSep));
+    sep->base.class = CLASS_SEP;
+    return sep;
+}
 
 int qrt_opp_id=0;
 QrtOpp *qrt_opp_alloc(char type){
@@ -173,6 +200,9 @@ enum classes identify_token(CtlCounted *token){
             if(c == '{' || c == '}'){
                 return CLASS_BLOCK;
             }
+            if(c == ';' || c == '\n'){
+                return CLASS_SEP;
+            }
         }
         if(class == CLASS_INT){
             if(!is_numeric(c)){
@@ -206,7 +236,6 @@ CtlCell *multiply_call(QrtOpp *opp, CtlAbs *a, CtlAbs *b){
 }
 
 void handle_token(struct qrt_ctx *ctx, CtlCounted *name){
-    /*printf("token(%d):%s\n", identify_token(name), ctl_counted_to_cstr(name));*/
     struct qrt_cell *current = ctx->next->next;
     QrtBlock *block;
 
@@ -225,17 +254,15 @@ void handle_token(struct qrt_ctx *ctx, CtlCounted *name){
         node->value = (CtlAbs *)block; 
     }else if(token_type == CLASS_INT){
         node->value = (CtlAbs *)ctl_int_alloc(atoi(ctl_counted_to_cstr(name)));
+    }else if(token_type == CLASS_SEP){
+        node->value = (CtlAbs *)qrt_sep_alloc();
     }else if(token_type == CLASS_COUNTED){
 
     }else if(token_type == CLASS_SYMBOL || token_type == CLASS_DEFINE){
         QrtSymbol *symbol = qrt_symbol_alloc(node, token_type == CLASS_DEFINE); 
         symbol->name = name;
-        if(symbol->is_define){
-            ctl_tree_insert(ctx->root->namespace, (CtlAbs *)name, (CtlAbs *)symbol);
-        }
         node->value = (CtlAbs *)symbol; 
     }
-
     node->previous = current;
     current->next = node;
     ctx->next->next = node;
@@ -262,7 +289,7 @@ struct qrt_ctx *parse(char *source){
                 handle_token(ctx, ctx->shelf); 
                 ctx->shelf = ctl_counted_alloc(NULL, 0);
             }
-            if(is_cmp(*p) || is_block(*p)){
+            if(is_cmp(*p) || is_block(*p) || is_sep(*p)){
                 handle_token(ctx, ctl_counted_alloc(p, 1));
             }
         }
@@ -280,8 +307,12 @@ char *get_class_str(CtlAbs *value){
         else return  "BLOCK_CLOSE";
     }else if(class == CLASS_COUNTED){
         return "COUNTED";
+    }else if(class == CLASS_SEP){
+        return "SEPORATOR";
     }else if(class == CLASS_OPP){
         return "OPERATOR";
+    }else if(class == CLASS_SEP){
+        return "SPORATORo";
     }else if(class == CLASS_SYMBOL){
         QrtSymbol *symbol = (QrtSymbol *)value;
         if(symbol->is_define) return "DEFINITION";
@@ -319,11 +350,6 @@ void print_node(struct qrt_cell *node, CtlCounted *space){
         class = node->value->base.class;
         cell = (struct qrt_cell *)node->value;
     }
-    /*
-    printf("%s<%s id:%2d next:%d prev:%d %s >\n",
-        ctl_counted_to_cstr(space), get_class_str((CtlAbs *)cell), node->base.id, next_id, prev_id, node_value
-    );
-    */
     printf("%s<%s %s>\n",
         ctl_counted_to_cstr(space), get_class_str((CtlAbs *)cell), node_value
     );
@@ -344,6 +370,38 @@ void qrt_out(void *_n){
     CtlCounted *key = (CtlCounted *)n->key;
     if(n->is_red) printf("\x1b[31m%s -> %s\x1b[0m", ctl_counted_to_cstr(key),get_class_str(n->data));
     else printf("%s -> %s", ctl_counted_to_cstr(key), get_class_str(n->data));
+}
+
+int printout(struct qrt_ctx * ctx){
+    QrtBlock *block = ctx->root;
+    struct qrt_cell *node = block->root;
+    CtlCounted *space = ctl_counted_alloc("                    ", 20);
+    space->length = 0;
+
+    do {
+        if(node->value){
+            if(node->value->base.class == CLASS_BLOCK){
+                print_node(node, space);
+                if(block->type == '{'){
+                   block = (QrtBlock *)node->value;
+                   space->length+=4;
+                   node = block->root;
+                }else{
+                   node = block->root->next;
+                   block = block->parent;
+                   space->length-= 4;
+                }
+
+            } 
+        }
+        if(!node){
+            break;
+        }
+        print_node(node, space);
+    }while(node && (node = node->next));
+    printf("\x1b[35m---------------------------------------------\x1b[0m\n");
+    return 0;
+
 }
 
 int exec(struct qrt_ctx * ctx){
@@ -403,10 +461,11 @@ int exec(struct qrt_ctx * ctx){
 
 
 int main(){
-    char *source = ":y 3\n :run {\n write y\n write x*2 \n}\n :z = run :x 5 :y 10 :hightlight 23 :play { y + 3  * { x + 3 + 9 } + 2 }\n ";
+    /*char *source = ":y 3\n :run {\n write y\n write x*2 \n}\n :z = run :x 5 :y 10 :hightlight 23 :play { y + 3  * { x + 3 + 9 } + 2 }\n ";*/
+    char *source = ":y 3 :x 2; :z 7\n :j 25 ";
     printf("source\n%s\n---------------\n", source);
     struct qrt_ctx *ctx = parse(source);
 
-
+    printout(ctx);
     return exec(ctx);
 }
