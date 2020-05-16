@@ -68,10 +68,8 @@ typedef struct qrt_block {
 struct qrt_ctx {
     struct base base;
     QrtBlock *root;
+    QrtBlock *next;
     CtlCounted *shelf;
-    struct qrt_cell *start;
-    struct qrt_cell *next;
-    struct qrt_cell *reg;
 };
 
 typedef struct qrt_opp {
@@ -139,7 +137,7 @@ struct qrt_ctx * qrt_ctx_alloc(){
     bzero(ctx, sizeof(struct qrt_ctx));
     ctx->base.class = CLASS_CTX;
     ctx->base.id = ++qrt_ctx_id;
-    ctx->root = qrt_block_alloc('{', NULL);
+    ctx->root = ctx->next = qrt_block_alloc('{', NULL);
     return ctx;
 }
 
@@ -206,7 +204,8 @@ CtlCell *multiply_call(QrtOpp *opp, CtlAbs *a, CtlAbs *b){
 
 void handle_token(struct qrt_ctx *ctx, CtlCounted *name){
     printf("token(%d):%s\n", identify_token(name), ctl_counted_to_cstr(name));
-    struct qrt_cell *current = ctx->root->next;
+    struct qrt_cell *current = ctx->next->next;
+    QrtBlock *block;
 
     struct qrt_cell *node = qrt_cell_alloc();
     enum classes token_type = identify_token(name);
@@ -219,8 +218,7 @@ void handle_token(struct qrt_ctx *ctx, CtlCounted *name){
         }
         node->value = (CtlAbs *)value; 
     }else if(token_type == CLASS_BLOCK){
-        QrtBlock *block = qrt_block_alloc(name->data[0], ctx->next);
-        ctx->next = block;
+        block = qrt_block_alloc(name->data[0], ctx->next);
         node->value = (CtlAbs *)block; 
     }else if(token_type == CLASS_INT){
         node->value = (CtlAbs *)ctl_int_alloc(atoi(ctl_counted_to_cstr(name)));
@@ -237,7 +235,10 @@ void handle_token(struct qrt_ctx *ctx, CtlCounted *name){
 
     node->previous = current;
     current->next = node;
-    ctx->root->next = node;
+    ctx->next->next = node;
+    if(token_type == CLASS_BLOCK){
+        ctx->next = block;
+    }
 }
 
 struct qrt_ctx *parse(char *source){
@@ -288,7 +289,7 @@ char *get_class_str(CtlAbs *value){
     return "UNKNOWN";
 }
 
-void print_node(struct qrt_cell *node){
+void print_node(struct qrt_cell *node, CtlCounted *space){
     char *node_value = "";
     int next_id = node->next != NULL ? node->next->base.id  : -1;
     int prev_id = node->previous != NULL ? node->previous->base.id  : -1;
@@ -314,8 +315,8 @@ void print_node(struct qrt_cell *node){
         class = node->value->base.class;
         cell = (struct qrt_cell *)node->value;
     }
-    printf("<%s id:%2d next:%d prev:%d %s >\n",
-        get_class_str((CtlAbs *)cell), node->base.id, next_id, prev_id, node_value
+    printf("%s<%s id:%2d next:%d prev:%d %s >\n",
+        ctl_counted_to_cstr(space), get_class_str((CtlAbs *)cell), node->base.id, next_id, prev_id, node_value
     );
 }
 
@@ -324,14 +325,22 @@ int main(){
     printf("source\n%s\n---------------\n", source);
     struct qrt_ctx *ctx = parse(source);
     struct qrt_cell *node = ctx->root->root;
+    Crray *stack = ctl_crray_alloc(16);
+    CtlCounted *space = ctl_counted_alloc("                    ", 20);
+    space->length = 0;
     do {
-        print_node(node);
-        /*
-        if(node->opp_type){
-            if(is_between_opp_type(node->opp_type)){
-                ctx->reg = node->call(node, node->previous, node->next); 
+        if(node->value && node->value->base.class == CLASS_BLOCK){
+            print_node(node, space);
+            QrtBlock * block = (QrtBlock *)node->value;
+            if(block->type == '{'){
+               space->length+=4;
+               node = block->root;
+            }else{
+               space->length-= 4;
+               node = block->root->next;
             }
+
         }
-        */
+        print_node(node, space);
     }while((node = node->next));
 }
