@@ -60,6 +60,7 @@ typedef struct qrt_block {
     struct base base;
     char type;
     CtlTree *namespace;
+    CtlTree *values;
     struct qrt_block *parent;
     CtlCell *root;
     CtlCell *next;
@@ -124,7 +125,8 @@ QrtBlock *qrt_block_alloc(char type, QrtBlock *parent){
     QrtBlock *block;
     ctl_xptr(block = malloc(sizeof(QrtBlock)));
     block->base.class = CLASS_BLOCK;
-    block->namespace = ctl_tree_alloc(ctl_tree_crownumber_int_cmp);
+    block->namespace = ctl_tree_alloc(ctl_tree_counted_cmp);
+    block->values = ctl_tree_alloc(ctl_tree_counted_cmp);
     block->root = block->next = qrt_cell_alloc();
     block->type = type;
     return block;
@@ -320,29 +322,38 @@ void print_node(struct qrt_cell *node, CtlCounted *space){
     );
 }
 
-int main(){
-    char *source = ":y 3\n :run {\n write y\n write x*2 \n}\n :z = run :x 5\n :play { y + 2  * { x + 3 + 9 } + 2 }\n ";
-    printf("source\n%s\n---------------\n", source);
-    struct qrt_ctx *ctx = parse(source);
+int exec(struct qrt_ctx * ctx){
     struct qrt_cell *node = ctx->root->root;
-    Crray *stack = ctl_crray_alloc(16);
     CtlCounted *space = ctl_counted_alloc("                    ", 20);
     space->length = 0;
     do {
-        if(node->value && node->value->base.class == CLASS_BLOCK){
-            print_node(node, space);
-            QrtBlock * block = (QrtBlock *)node->value;
-            if(block->type == '{'){
-               space->length+=4;
-               node = block->root;
-            }else{
-               node = block->root->next;
-               space->length-= 4;
-            }
+        if(node->value){
+            if(node->value->base.class == CLASS_BLOCK){
+                print_node(node, space);
+                QrtBlock * block = (QrtBlock *)node->value;
+                if(block->type == '{'){
+                   space->length+=4;
+                   node = block->root;
+                }else{
+                   node = block->root->next;
+                   space->length-= 4;
+                }
 
+            }else if(node->value->base.class == CLASS_SYMBOL){
+            
+            }
         }
         if(node){
             print_node(node, space);
         }
     }while(node && (node = node->next));
+    return 0;
+}
+
+
+int main(){
+    char *source = ":y 3\n :run {\n write y\n write x*2 \n}\n :z = run :x 5\n :play { y + 2  * { x + 3 + 9 } + 2 }\n ";
+    printf("source\n%s\n---------------\n", source);
+    struct qrt_ctx *ctx = parse(source);
+    return exec(ctx);
 }
