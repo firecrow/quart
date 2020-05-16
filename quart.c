@@ -47,11 +47,11 @@ int is_between_opp_type(char type){
     return type != QRT_NOT;
 }
 
-struct qrt_ctx {
+struct qrt_parse_ctx {
     struct base base;
     CtlTree *namespace;
     CtlCounted *shelf;
-    struct qrt_ctx *parent;
+    struct qrt_parse_ctx *parent;
     struct qrt_cell *start;
     struct qrt_cell *next;
     struct qrt_cell *reg;
@@ -114,13 +114,13 @@ struct qrt_cell *qrt_cell_alloc(){
     return node;
 }
 
-int qrt_ctx_id = 0;
-struct qrt_ctx * qrt_ctx_alloc(){
-    struct qrt_ctx *ctx;
-    ctl_xptr(ctx = malloc(sizeof(struct qrt_ctx)));
-    bzero(ctx, sizeof(struct qrt_ctx));
+int qrt_parse_ctx_id = 0;
+struct qrt_parse_ctx * qrt_parse_ctx_alloc(){
+    struct qrt_parse_ctx *ctx;
+    ctl_xptr(ctx = malloc(sizeof(struct qrt_parse_ctx)));
+    bzero(ctx, sizeof(struct qrt_parse_ctx));
     ctx->base.class = CLASS_BLOCK;
-    ctx->base.id = ++qrt_ctx_id;
+    ctx->base.id = ++qrt_parse_ctx_id;
     ctx->namespace = ctl_tree_alloc(ctl_tree_crownumber_int_cmp);
     ctx->next = ctx->start = qrt_cell_alloc();
     return ctx;
@@ -184,7 +184,7 @@ CtlCell *multiply_call(QrtOpp *opp, CtlAbs *a, CtlAbs *b){
     return node;
 }
 
-void handle_token(struct qrt_ctx *ctx, CtlCounted *name){
+void handle_token(struct qrt_parse_ctx *ctx, CtlCounted *name){
     printf("token(%d):%s\n", identify_token(name), ctl_counted_to_cstr(name));
     struct qrt_cell *current = ctx->next;
 
@@ -218,9 +218,9 @@ void handle_token(struct qrt_ctx *ctx, CtlCounted *name){
     ctx->next = node;
 }
 
-struct qrt_ctx *parse(char *source){
+struct qrt_parse_ctx *parse(char *source){
     char *p = source;
-    struct qrt_ctx *ctx = qrt_ctx_alloc();
+    struct qrt_parse_ctx *ctx = qrt_parse_ctx_alloc();
     ctx->shelf = ctl_counted_alloc(NULL, 0);
 
     if(p == '\0') 
@@ -286,15 +286,15 @@ void print_node(struct qrt_cell *node){
         class = node->value->base.class;
         cell = (struct qrt_cell *)node->value;
     }
-    printf("<NODE id:%2d class:%s next:%d prev:%d %s >\n",
-        node->base.id, get_class_str((CtlAbs *)cell), next_id, prev_id, node_value
+    printf("<%s id:%2d next:%d prev:%d %s >\n",
+        get_class_str((CtlAbs *)cell), node->base.id, next_id, prev_id, node_value
     );
 }
 
 int main(){
     char *source = ":y 3\n :run {\n write y\n write x*2 \n}\n :z = run :x 5 ";
     printf("source\n%s\n---------------\n", source);
-    struct qrt_ctx *ctx = parse(source);
+    struct qrt_parse_ctx *ctx = parse(source);
     struct qrt_cell *node = ctx->start;
     do {
         print_node(node);
