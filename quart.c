@@ -57,6 +57,7 @@ typedef struct qrt_cell {
 } CtlCell;
 
 typedef struct qrt_block {
+    struct base base;
     char type;
     CtlTree *namespace;
     struct qrt_block *parent;
@@ -124,8 +125,10 @@ struct qrt_cell *qrt_cell_alloc(){
 QrtBlock *qrt_block_alloc(char type, QrtBlock *parent){
     QrtBlock *block;
     ctl_xptr(block = malloc(sizeof(QrtBlock)));
+    block->base.class = CLASS_BLOCK;
     block->namespace = ctl_tree_alloc(ctl_tree_crownumber_int_cmp);
     block->root = block->next = qrt_cell_alloc();
+    block->type = type;
     return block;
 }
 
@@ -134,7 +137,7 @@ struct qrt_ctx * qrt_ctx_alloc(){
     struct qrt_ctx *ctx;
     ctl_xptr(ctx = malloc(sizeof(struct qrt_ctx)));
     bzero(ctx, sizeof(struct qrt_ctx));
-    ctx->base.class = CLASS_BLOCK;
+    ctx->base.class = CLASS_CTX;
     ctx->base.id = ++qrt_ctx_id;
     ctx->root = qrt_block_alloc('{', NULL);
     return ctx;
@@ -166,6 +169,9 @@ enum classes identify_token(CtlCounted *token){
             if(is_cmp(c)){
                 return CLASS_OPP;
             } 
+            if(c == '{' || c == '}'){
+                return CLASS_BLOCK;
+            }
         }
         if(class == CLASS_INT){
             if(!is_numeric(c)){
@@ -213,7 +219,9 @@ void handle_token(struct qrt_ctx *ctx, CtlCounted *name){
         }
         node->value = (CtlAbs *)value; 
     }else if(token_type == CLASS_BLOCK){
-        ;
+        QrtBlock *block = qrt_block_alloc(name->data[0], ctx->next);
+        ctx->next = block;
+        node->value = (CtlAbs *)block; 
     }else if(token_type == CLASS_INT){
         node->value = (CtlAbs *)ctl_int_alloc(atoi(ctl_counted_to_cstr(name)));
     }else if(token_type == CLASS_COUNTED){
@@ -261,6 +269,10 @@ char *get_class_str(CtlAbs *value){
     int class = value->base.class;
     if(class == CLASS_INT){
         return "INT";
+    }else if(class == CLASS_BLOCK){
+        QrtBlock *block = (QrtBlock *)value;
+        if(block->type == '{') return "BLOCK_OPEN";
+        else return  "BLOCK_CLOSE";
     }else if(class == CLASS_COUNTED){
         return "COUNTED";
     }else if(class == CLASS_OPP){
@@ -283,7 +295,9 @@ void print_node(struct qrt_cell *node){
     int class = node->base.class;
     struct qrt_cell *cell = node;
     if(node->value){
-        if(node->value->base.class == CLASS_OPP){
+        if(node->value->base.class == CLASS_BLOCK){
+            node_value = ctl_counted_format("%c", ((QrtBlock *)node->value)->type);
+        }else if(node->value->base.class == CLASS_OPP){
             node_value = ctl_counted_to_cstr(ctl_counted_format("%c", ((QrtOpp *)node->value)->opp_type));
         }else if(node->value->base.class == CLASS_INT){
             node_value = ctl_counted_to_cstr(ctl_counted_format("%d", asCtlInt(node->value)->value));
