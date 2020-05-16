@@ -8,6 +8,7 @@
 #include "../crowtils/crownumber.c"
 #include "../crowtils/crray.c"
 #include "../crowtils/tree.c"
+#include "../crowtils/treeprint.c"
 
 int is_punc(char c){
     return (c == ';' || c == ',' || c == '<' || c == '>' || c == '=' || c == '{' || c == '}' || c == '[' || c == ']');
@@ -228,9 +229,12 @@ void handle_token(struct qrt_ctx *ctx, CtlCounted *name){
 
     }else if(token_type == CLASS_SYMBOL || token_type == CLASS_DEFINE){
         QrtSymbol *symbol = qrt_symbol_alloc(node, token_type == CLASS_DEFINE); 
+        printf("symbol->name->base.class:%d\n",name->base.class);
         symbol->name = name;
         if(symbol->is_define){
+            /*
             ctl_tree_insert(ctx->root->namespace, (CtlAbs *)name, (CtlAbs *)symbol);
+            */
         }
         node->value = (CtlAbs *)symbol; 
     }
@@ -239,6 +243,7 @@ void handle_token(struct qrt_ctx *ctx, CtlCounted *name){
     current->next = node;
     ctx->next->next = node;
     if(token_type == CLASS_BLOCK){
+        block->parent = ctx->next;
         ctx->next = block;
     }
 }
@@ -322,30 +327,74 @@ void print_node(struct qrt_cell *node, CtlCounted *space){
     );
 }
 
+int is_variable_value(CtlAbs *value){
+    printf("\x1b[33mis_variable_value:%d\x1b[0m\n", value->base.class);
+    switch(value->base.class){
+        case CLASS_INT:
+        case CLASS_COUNTED:
+        case CLASS_BLOCK:
+            return 1;
+    }
+    printf("no");
+    return 0;
+}
+
 int exec(struct qrt_ctx * ctx){
-    struct qrt_cell *node = ctx->root->root;
+
+
+    struct treeprint_head *tph;
+    ctl_xptr(tph = malloc(sizeof(struct treeprint_head)));
+    bzero(tph, sizeof(struct treeprint_head));
+    tph->get_left = get_left;
+    tph->get_right = get_right;
+    tph->get_parent = get_parent;
+    tph->out = out;
+
+    QrtBlock *block = ctx->root;
+    struct qrt_cell *node = block->root;
     CtlCounted *space = ctl_counted_alloc("                    ", 20);
     space->length = 0;
+
+
     do {
         if(node->value){
             if(node->value->base.class == CLASS_BLOCK){
                 print_node(node, space);
-                QrtBlock * block = (QrtBlock *)node->value;
                 if(block->type == '{'){
+                   block = (QrtBlock *)node->value;
                    space->length+=4;
                    node = block->root;
                 }else{
+                   if(!ctl_tree_empty(block->namespace)){
+                       printf("print tree\n");
+                       fflush(stdout);
+                       ct_tree_print(tph, block->namespace);
+                       printf("print tree after\n");
+                       fflush(stdout);
+                   }
                    node = block->root->next;
+                   block = block->parent;
                    space->length-= 4;
                 }
 
             }else if(node->value->base.class == CLASS_SYMBOL){
-            
+                QrtSymbol *symbol = (QrtSymbol *)node->value;
+                printf("\x1b[33mis_define:%d\x1b[0m\n", symbol->is_define);
+                if(symbol->is_define && node->next && node->next->value && is_variable_value(node->next->value)){
+                    CtlAbs *value = node->next->value;
+                    symbol->value = value; 
+                    node = node->next->next;
+                    printf("inserting into table:%s\n", ctl_counted_to_cstr(symbol->name));
+                    ctl_tree_insert(block->namespace, symbol->name, value);
+                    ctl_tree_insert(block->namespace, ctl_counted_from_cstr("alpha"), value);
+                    ctl_tree_insert(block->namespace, ctl_counted_from_cstr("bravo"), value);
+                }
             }
         }
-        if(node){
-            print_node(node, space);
+        if(!node){
+            break;
         }
+        print_node(node, space);
     }while(node && (node = node->next));
     return 0;
 }
@@ -355,5 +404,7 @@ int main(){
     char *source = ":y 3\n :run {\n write y\n write x*2 \n}\n :z = run :x 5\n :play { y + 2  * { x + 3 + 9 } + 2 }\n ";
     printf("source\n%s\n---------------\n", source);
     struct qrt_ctx *ctx = parse(source);
+
+
     return exec(ctx);
 }
