@@ -321,7 +321,7 @@ void print_node(struct qrt_cell *node, CtlCounted *space){
 }
 
 int main(){
-    char *source = ":y 3\n :run {\n write y\n write x*2 \n}\n :z = run :x 5 ";
+    char *source = ":y 3\n :run {\n write y\n write x*2 \n}\n :z = run :x 5\n :play { y + 2  * { x + 3 + 9 } + 2 }\n ";
     printf("source\n%s\n---------------\n", source);
     struct qrt_ctx *ctx = parse(source);
     struct qrt_cell *node = ctx->root->root;
