@@ -47,16 +47,6 @@ int is_between_opp_type(char type){
     return type != QRT_NOT;
 }
 
-struct qrt_ctx {
-    struct base base;
-    CtlTree *namespace;
-    CtlCounted *shelf;
-    struct qrt_ctx *parent;
-    struct qrt_cell *start;
-    struct qrt_cell *next;
-    struct qrt_cell *reg;
-};
-
 typedef struct qrt_cell {
     struct base base;
     int status;
@@ -65,6 +55,23 @@ typedef struct qrt_cell {
     struct qrt_cell *next;
     struct qrt_cell *previous;
 } CtlCell;
+
+typedef struct qrt_block {
+    char type;
+    CtlTree *namespace;
+    struct qrt_block *parent;
+    CtlCell *root;
+    CtlCell *next;
+} QrtBlock;
+
+struct qrt_ctx {
+    struct base base;
+    QrtBlock *root;
+    CtlCounted *shelf;
+    struct qrt_cell *start;
+    struct qrt_cell *next;
+    struct qrt_cell *reg;
+};
 
 typedef struct qrt_opp {
     struct base base;
@@ -114,6 +121,14 @@ struct qrt_cell *qrt_cell_alloc(){
     return node;
 }
 
+QrtBlock *qrt_block_alloc(char type, QrtBlock *parent){
+    QrtBlock *block;
+    ctl_xptr(block = malloc(sizeof(QrtBlock)));
+    block->namespace = ctl_tree_alloc(ctl_tree_crownumber_int_cmp);
+    block->root = block->next = qrt_cell_alloc();
+    return block;
+}
+
 int qrt_ctx_id = 0;
 struct qrt_ctx * qrt_ctx_alloc(){
     struct qrt_ctx *ctx;
@@ -121,8 +136,7 @@ struct qrt_ctx * qrt_ctx_alloc(){
     bzero(ctx, sizeof(struct qrt_ctx));
     ctx->base.class = CLASS_BLOCK;
     ctx->base.id = ++qrt_ctx_id;
-    ctx->namespace = ctl_tree_alloc(ctl_tree_crownumber_int_cmp);
-    ctx->next = ctx->start = qrt_cell_alloc();
+    ctx->root = qrt_block_alloc('{', NULL);
     return ctx;
 }
 
@@ -186,7 +200,7 @@ CtlCell *multiply_call(QrtOpp *opp, CtlAbs *a, CtlAbs *b){
 
 void handle_token(struct qrt_ctx *ctx, CtlCounted *name){
     printf("token(%d):%s\n", identify_token(name), ctl_counted_to_cstr(name));
-    struct qrt_cell *current = ctx->next;
+    struct qrt_cell *current = ctx->root->next;
 
     struct qrt_cell *node = qrt_cell_alloc();
     enum classes token_type = identify_token(name);
@@ -208,14 +222,14 @@ void handle_token(struct qrt_ctx *ctx, CtlCounted *name){
         QrtSymbol *symbol = qrt_symbol_alloc(node, token_type == CLASS_DEFINE); 
         symbol->name = name;
         if(symbol->is_define){
-            ctl_tree_insert(ctx->namespace, (CtlAbs *)name, (CtlAbs *)symbol);
+            ctl_tree_insert(ctx->root->namespace, (CtlAbs *)name, (CtlAbs *)symbol);
         }
         node->value = (CtlAbs *)symbol; 
     }
 
     node->previous = current;
     current->next = node;
-    ctx->next = node;
+    ctx->root->next = node;
 }
 
 struct qrt_ctx *parse(char *source){
@@ -295,7 +309,7 @@ int main(){
     char *source = ":y 3\n :run {\n write y\n write x*2 \n}\n :z = run :x 5 ";
     printf("source\n%s\n---------------\n", source);
     struct qrt_ctx *ctx = parse(source);
-    struct qrt_cell *node = ctx->start;
+    struct qrt_cell *node = ctx->root->root;
     do {
         print_node(node);
         /*
