@@ -297,7 +297,7 @@ void print_node(struct qrt_cell *node, CtlCounted *space){
     struct qrt_cell *cell = node;
     if(node->value){
         if(node->value->base.class == CLASS_BLOCK){
-            node_value = ctl_counted_format("%c", ((QrtBlock *)node->value)->type);
+            node_value = ctl_counted_to_cstr(ctl_counted_format("%c", ((QrtBlock *)node->value)->type));
         }else if(node->value->base.class == CLASS_OPP){
             node_value = ctl_counted_to_cstr(ctl_counted_format("%c", ((QrtOpp *)node->value)->opp_type));
         }else if(node->value->base.class == CLASS_INT){
@@ -336,11 +336,13 @@ int main(){
                space->length+=4;
                node = block->root;
             }else{
-               space->length-= 4;
                node = block->root->next;
+               space->length-= 4;
             }
 
         }
-        print_node(node, space);
-    }while((node = node->next));
+        if(node){
+            print_node(node, space);
+        }
+    }while(node && (node = node->next));
 }
