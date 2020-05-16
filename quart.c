@@ -64,20 +64,18 @@ typedef struct qrt_cell {
 struct qrt_statement;
 typedef struct qrt_block {
     struct base base;
-    char type;
-    CtlTree *namespace;
-    CtlTree *values;
     struct qrt_block *parent;
     struct qrt_statement *root;
     struct qrt_statement *next;
+    CtlTree *namespace;
+    CtlTree *values;
+    char type;
 } QrtBlock;
 
 typedef struct qrt_statement {
     struct base base;
-    char type;
-    CtlTree *namespace;
-    CtlTree *values;
     struct qrt_block *parent;
+    struct qrt_statement *previous;
     CtlCell *root;
     CtlCell *next;
 } QrtStatement;
@@ -149,6 +147,15 @@ struct qrt_cell *qrt_cell_alloc(){
     return node;
 }
 
+QrtStatement *qrt_statement_alloc(QrtBlock *parent, QrtStatement *previous){
+    QrtStatement *statement;
+    ctl_xptr(statement = malloc(sizeof(QrtStatement)));
+    statement->base.class = CLASS_STATEMENT;
+    statement->previous = previous;
+    statement->root = statement->next = qrt_cell_alloc();
+    return statement;
+}
+
 QrtBlock *qrt_block_alloc(char type, QrtBlock *parent){
     QrtBlock *block;
     ctl_xptr(block = malloc(sizeof(QrtBlock)));
@@ -156,6 +163,7 @@ QrtBlock *qrt_block_alloc(char type, QrtBlock *parent){
     block->namespace = ctl_tree_alloc(ctl_tree_counted_cmp);
     block->values = ctl_tree_alloc(ctl_tree_counted_cmp);
     block->root = block->next = qrt_cell_alloc();
+    block->root = block->next = qrt_statement_alloc(block, NULL);
     block->type = type;
     return block;
 }
@@ -236,6 +244,8 @@ CtlCell *multiply_call(QrtOpp *opp, CtlAbs *a, CtlAbs *b){
 }
 
 void handle_token(struct qrt_ctx *ctx, CtlCounted *name){
+    QrtStatement *statement = ctx->next->next;
+    /*
     struct qrt_cell *current = ctx->next->next;
     QrtBlock *block;
 
@@ -270,6 +280,7 @@ void handle_token(struct qrt_ctx *ctx, CtlCounted *name){
         block->parent = ctx->next;
         ctx->next = block;
     }
+    */
 }
 
 struct qrt_ctx *parse(char *source){
@@ -372,9 +383,10 @@ void qrt_out(void *_n){
     else printf("%s -> %s", ctl_counted_to_cstr(key), get_class_str(n->data));
 }
 
+/*
 int printout(struct qrt_ctx * ctx){
     QrtBlock *block = ctx->root;
-    struct qrt_cell *node = block->root;
+    struct qrt_cell *node = block->root->root;
     CtlCounted *space = ctl_counted_alloc("                    ", 20);
     space->length = 0;
 
@@ -391,7 +403,6 @@ int printout(struct qrt_ctx * ctx){
                    block = block->parent;
                    space->length-= 4;
                 }
-
             } 
         }
         if(!node){
@@ -458,14 +469,16 @@ int exec(struct qrt_ctx * ctx){
     }
     return 0;
 }
+*/
 
 
 int main(){
-    /*char *source = ":y 3\n :run {\n write y\n write x*2 \n}\n :z = run :x 5 :y 10 :hightlight 23 :play { y + 3  * { x + 3 + 9 } + 2 }\n ";*/
+    char *sourcev = ":y 3\n :run {\n write y\n write x*2 \n}\n :z = run :x 5 :y 10 :hightlight 23 :play { y + 3  * { x + 3 + 9 } + 2 }\n ";
     char *source = ":y 3 :x 2; :z 7\n :j 25 ";
-    printf("source\n%s\n---------------\n", source);
-    struct qrt_ctx *ctx = parse(source);
+    printf("source\n%s\n---------------\n", sourcev);
+    struct qrt_ctx *ctx = parse(sourcev);
 
-    printout(ctx);
-    return exec(ctx);
+    /*printout(ctx);*/
+    /*exec(ctx);*/
+    return 0;
 }
