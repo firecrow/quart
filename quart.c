@@ -113,7 +113,7 @@ enum classes identify_token(CtlCounted *token){
     return class;
 }
 
-QrtCell *handle_token(struct qrt_ctx *ctx, CtlCounted *name, QrtCell *current){
+QrtCell *sequence_tokens(struct qrt_ctx *ctx, CtlCounted *name, QrtCell *current){
     struct qrt_cell *node = qrt_cell_alloc();
     enum classes token_type = identify_token(name);
     if(token_type == CLASS_OPP){
@@ -153,11 +153,11 @@ struct qrt_ctx *parse(char *source){
             if((ctx->shelf->length == 0 && is_alpha(*p)) || is_alpha_numeric(*p)){
                 ctl_counted_push(ctx->shelf, p, 1);
             }else if(ctx->shelf->length > 0){
-                cell = handle_token(ctx, ctx->shelf, cell); 
+                cell = sequence_tokens(ctx, ctx->shelf, cell); 
                 ctx->shelf = ctl_counted_alloc(NULL, 0);
             }
             if(is_cmp(*p) || is_block(*p) || is_sep(*p)){
-                cell = handle_token(ctx, ctl_counted_alloc(p, 1), cell);
+                cell = sequence_tokens(ctx, ctl_counted_alloc(p, 1), cell);
             }
         }
     }while(*++p != '\0');
