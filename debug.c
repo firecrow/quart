@@ -104,6 +104,8 @@ void print_blocks(QrtCtx *ctx){
             ctl_crray_push(stack, block);
             block = block->branch;
             print_block(block, space);
+            if(block->branch)
+                continue;
         }
         if(block->next == NULL && stack->length > 1){
             space->length -= 4;
