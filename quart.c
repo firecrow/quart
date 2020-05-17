@@ -173,9 +173,11 @@ int main(){
     printf("source\n%s\n---------------\n", sourcev);
 
     struct qrt_ctx *ctx = parse(sourcev);
-    /*print_sequence(ctx);*/
+    print_sequence(ctx);
+    printf("------sequence--------\n");
     ctx = blocks(ctx);
     print_blocks(ctx);
+    /*statements(ctx)*/
     /*exec(ctx);*/
     return 0;
 }
