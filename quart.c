@@ -13,16 +13,42 @@
 #include "utils.c"
 #include "debug.c"
 
-QrtCtx *branches(QrtCtx *ctx){
-    QrtStatement *stmt = ctx->root->statement_root;
+QrtCtx *blocks(QrtCtx *ctx){
+    QrtBlock *block = ctx->root;
+    QrtBlock *newblock;
+    QrtCell *start = ctx->start;
+    QrtCell *before = start;
+    QrtCell *cell = before;
+    while(cell){
+        if(cell->value && cell->value->base.class == CLASS_BLOCK){
+            QrtBlock *newblock = (QrtBlock *)cell->value; 
+            QrtCell *insert = qrt_cell_alloc();
+            if(newblock->type == '{'){
+                insert->value = cell;  
+                insert->previous = cell->previous;
+                insert->next = cell->next;
+                cell->previous->next = insert;
+                before = insert;
+            }else{
+                cell->previous->next = NULL;   
+                cell->previous = NULL;
+                before->next = cell;
+            }
+        }
+        cell = cell->next;
+    }
+    return ctx;
+}
+
+/*
+QrtCtx *statements(QrtBlock *block){
+    QrtStatement *stmt = block->statement_root;
     QrtStatement *newstmt;
     QrtCell *start = ctx->start;
     QrtCell *before = start;
     QrtCell *cell = before;
-    stmt->next = qrt_statement_alloc(NULL, stmt, before);
     while(cell){
         if(is_break_value(cell->value)){
-            printf("from %d to %d\n", before->base.id, cell->base.id);
             newstmt = qrt_statement_alloc(NULL, stmt, before);
             stmt->next = newstmt;
             stmt = newstmt;
@@ -35,6 +61,7 @@ QrtCtx *branches(QrtCtx *ctx){
     }
     return ctx;
 }
+*/
 
 enum classes identify_token(CtlCounted *token){
     int i = 0;
@@ -142,14 +169,14 @@ struct qrt_ctx *parse(char *source){
 
 
 int main(){
-    char *sourcev = ":y 3\n :run {\n write y\n write x*2 \n}\n :z = run :x 5 :y 10 :hightlight 23 :play { y + 3  * { x + 3 + 9 } + 2 }\n ";
+    char *sourcev = ":y 3\n :run {\n write y\n write x*2 \n}\n :z = run :x 5 :y 10; :hightlight 23 :play { y + 3  * { x + 3 + 9 } + 2 }\n ";
     char *source = ":y 3 :x 2; :z 7\n :j 25 ";
     printf("source\n%s\n---------------\n", sourcev);
 
     struct qrt_ctx *ctx = parse(sourcev);
     /*print_sequence(ctx);*/
-    ctx = branches(ctx);
-    print_branches(ctx);
+    ctx = blocks(ctx);
+    print_blocks(ctx);
     /*exec(ctx);*/
     return 0;
 }

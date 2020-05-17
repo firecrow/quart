@@ -65,3 +65,20 @@ void print_branches(QrtCtx *ctx){
         stmt = stmt->next;
     }
 }
+
+void print_blocks(QrtCtx *ctx){
+    CtlCounted * space = ctl_counted_alloc("                ", 16);
+    space->length = 0;
+
+    QrtCell *cell = ctx->start;
+
+    while(cell){
+        if(cell->value && cell->value->base.class == CLASS_CELL){
+            space->length+=4;
+            printf("-->");
+            print_node((QrtCell *)cell->value, space);
+        }
+        print_node(cell, space);
+        cell= cell->next;
+    }
+}
