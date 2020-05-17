@@ -71,14 +71,29 @@ void print_blocks(QrtCtx *ctx){
     space->length = 0;
 
     QrtCell *cell = ctx->start;
+    QrtCell *before;
 
     while(cell){
         if(cell->value && cell->value->base.class == CLASS_CELL){
             space->length+=4;
-            printf("-->");
-            print_node((QrtCell *)cell->value, space);
+            if(cell->next)
+                before = cell->next->next;
+            cell = (QrtCell *)cell->value;
+        }
+        if(cell->value && cell->value->base.class == CLASS_BLOCK){
+            QrtBlock *block = (QrtBlock *)cell->value;
+            if(block->type == '}'){
+                cell = before;
+                space->length-=4;
+                printf("<--");
+            }
         }
         print_node(cell, space);
-        cell= cell->next;
+        cell = cell->next;
+        if(!cell && before){
+            space->length-=4;
+            cell = before;
+            before = NULL;
+        }
     }
 }

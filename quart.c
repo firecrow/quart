@@ -26,12 +26,11 @@ QrtCtx *blocks(QrtCtx *ctx){
             if(newblock->type == '{'){
                 insert->value = cell;  
                 insert->previous = cell->previous;
-                insert->next = cell->next;
                 cell->previous->next = insert;
                 before = insert;
             }else{
                 cell->previous->next = NULL;   
-                cell->previous = NULL;
+                cell->previous = before;
                 before->next = cell;
             }
         }
