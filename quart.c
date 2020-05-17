@@ -19,6 +19,7 @@ QrtCtx *blocks(QrtCtx *ctx){
     QrtCell *start = ctx->start;
     QrtCell *before = start;
     QrtCell *cell = before;
+    QrtCell *next = cell;
     while(cell){
         if(cell->value && cell->value->base.class == CLASS_BLOCK){
             QrtBlock *newblock = (QrtBlock *)cell->value; 
@@ -29,9 +30,10 @@ QrtCtx *blocks(QrtCtx *ctx){
                 cell->previous->next = insert;
                 before = insert;
             }else{
-                cell->previous->next = NULL;   
-                cell->previous = before;
-                before->next = cell;
+                before->next = cell->next;
+                cell->next = NULL;   
+                cell = before->next;
+                continue;
             }
         }
         cell = cell->next;

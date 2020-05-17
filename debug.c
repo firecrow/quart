@@ -76,24 +76,18 @@ void print_blocks(QrtCtx *ctx){
     while(cell){
         if(cell->value && cell->value->base.class == CLASS_CELL){
             space->length+=4;
-            if(cell->next)
-                before = cell->next->next;
+            before = cell->next;
             cell = (QrtCell *)cell->value;
         }
         if(cell->value && cell->value->base.class == CLASS_BLOCK){
             QrtBlock *block = (QrtBlock *)cell->value;
             if(block->type == '}'){
                 cell = before;
-                space->length-=4;
-                printf("<--");
+                before = NULL;
+                continue;
             }
         }
         print_node(cell, space);
         cell = cell->next;
-        if(!cell && before){
-            space->length-=4;
-            cell = before;
-            before = NULL;
-        }
     }
 }
