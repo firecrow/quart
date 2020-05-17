@@ -42,9 +42,10 @@ void print_block(QrtBlock *block, CtlCounted *space){
     char *node_value = ctl_counted_to_cstr(ctl_counted_format("%c", block->type));
     int next_id = block->next != NULL ? block->next->base.id  : -1;
     int prev_id = block->parent != NULL ? block->parent->base.id  : -1;
+    int branch_id = block->branch != NULL ? block->branch->base.id  : -1;
     int class = block->base.class;
     printf("%s<%s %s id:%d p:%d n:%d branch:%d>\n",
-        ctl_counted_to_cstr(space), "BLOCK", node_value, block->base.id, prev_id, next_id, block->branch != NULL
+        ctl_counted_to_cstr(space), block->type == '{' ? "BLOCK" : "BCELL", node_value, block->base.id, prev_id, next_id, branch_id 
     );
 }
 
@@ -94,12 +95,20 @@ void print_blocks(QrtCtx *ctx){
 
     QrtBlock *block = ctx->root;
     QrtBlock *prev;
+    QrtBlock *current;
     ctl_crray_push(stack, block);
     while(block){
         print_block(block, space);
         if(block->branch){
-            printf(">>>");
-            print_block(block->branch, space);
+            space->length += 4;
+            ctl_crray_push(stack, block);
+            block = block->branch;
+            print_block(block, space);
+        }
+        if(block->next == NULL && stack->length > 1){
+            space->length -= 4;
+            prev = ctl_crray_pop(stack, -1); 
+            block = prev;
         }
         block = block->next;
     } 
