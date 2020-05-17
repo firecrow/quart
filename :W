@@ -14,52 +14,6 @@
 #include "debug.c"
 
 
-
-/*
-int printout(struct qrt_ctx * ctx){
-    QrtBlock *block = ctx->root;
-    QrtBlock *newblock = NULL;
-    QrtStatement *prev_statement;
-    struct qrt_cell *node = block->root->root;
-    CtlCounted *space = ctl_counted_alloc("                    ", 20);
-    struct qrt_cell *latest = node;
-    space->length = 0;
-
-    do {
-        printf("open\n");
-        if(node->value){
-            if(node->value->base.class == CLASS_BLOCK){
-                print_node(node, space);
-                newblock = node->value;
-                if(newblock->type == '{'){
-                   space->length+=4;
-                   print_node(newblock->root, space);
-                   node = newblock->root->root;
-                   continue;
-                }else{
-                   node = block->root->next;
-                   block = block->parent;
-                   space->length-= 4;
-                }
-            } 
-            if(node->value->base.class == CLASS_SEP){
-                QrtStatement *statement = qrt_statement_alloc(block, prev_statement, prev_statement->root->next);
-                prev_statement = statement;
-            }
-            printf("found statement 2\n");
-        }
-        if(!node){
-            break;
-        }
-        printf("found statement 3\n");
-        print_node(node, space);
-    }while(node && (node = node->next));
-    printf("\x1b[35m---------------------------------------------\x1b[0m\n");
-    return 0;
-
-}
-*/
-
 enum classes identify_token(CtlCounted *token){
     int i = 0;
     char c; 
@@ -113,13 +67,60 @@ enum classes identify_token(CtlCounted *token){
     return class;
 }
 
-QrtCell *handle_token(struct qrt_ctx *ctx, CtlCounted *name, QrtCell *current){
+int printout(struct qrt_ctx * ctx){
+    QrtBlock *block = ctx->root;
+    QrtBlock *newblock = NULL;
+    QrtStatement *prev_statement;
+    struct qrt_cell *node = block->root->root;
+    CtlCounted *space = ctl_counted_alloc("                    ", 20);
+    struct qrt_cell *latest = node;
+    space->length = 0;
+
+    do {
+        printf("open\n");
+        if(node->value){
+            if(node->value->base.class == CLASS_BLOCK){
+                print_node(node, space);
+                newblock = node->value;
+                if(newblock->type == '{'){
+                   space->length+=4;
+                   print_node(newblock->root, space);
+                   node = newblock->root->root;
+                   continue;
+                }else{
+                   node = block->root->next;
+                   block = block->parent;
+                   space->length-= 4;
+                }
+            } 
+            if(node->value->base.class == CLASS_SEP){
+                QrtStatement *statement = qrt_statement_alloc(block, prev_statement, prev_statement->root->next);
+                prev_statement = statement;
+            }
+            printf("found statement 2\n");
+        }
+        if(!node){
+            break;
+        }
+        printf("found statement 3\n");
+        print_node(node, space);
+    }while(node && (node = node->next));
+    printf("\x1b[35m---------------------------------------------\x1b[0m\n");
+    return 0;
+
+}
+
+void handle_token(struct qrt_ctx *ctx, CtlCounted *name){
+    QrtStatement *statement = ctx->next->next;
+    struct qrt_cell *current = ctx->next->next;
+    QrtBlock *block;
+
     struct qrt_cell *node = qrt_cell_alloc();
     enum classes token_type = identify_token(name);
     if(token_type == CLASS_OPP){
         node->value = (CtlAbs *)qrt_opp_alloc(name->data[0]); 
     }else if(token_type == CLASS_BLOCK){
-        node->value = (CtlAbs *)qrt_block_alloc(name->data[0], NULL); 
+        node->value = (CtlAbs *)qrt_block_alloc(name->data[0], ctx->next); 
     }else if(token_type == CLASS_INT){
         node->value = (CtlAbs *)ctl_int_alloc(atoi(ctl_counted_to_cstr(name)));
     }else if(token_type == CLASS_SEP){
@@ -131,18 +132,19 @@ QrtCell *handle_token(struct qrt_ctx *ctx, CtlCounted *name, QrtCell *current){
         symbol->name = name;
         node->value = (CtlAbs *)symbol; 
     }
-
-    current->next = node;
     node->previous = current;
-    return node;
+    current->next = node;
+    ctx->next->next = node;
+    if(token_type == CLASS_BLOCK){
+        block->parent = ctx->next;
+        ctx->next = block;
+    }
 }
 
 struct qrt_ctx *parse(char *source){
     char *p = source;
     struct qrt_ctx *ctx = qrt_ctx_alloc();
     ctx->shelf = ctl_counted_alloc(NULL, 0);
-    struct qrt_cell *cell = qrt_cell_alloc();
-    ctx->start = cell;
 
     if(p == '\0') 
         return NULL;
@@ -153,11 +155,11 @@ struct qrt_ctx *parse(char *source){
             if((ctx->shelf->length == 0 && is_alpha(*p)) || is_alpha_numeric(*p)){
                 ctl_counted_push(ctx->shelf, p, 1);
             }else if(ctx->shelf->length > 0){
-                cell = handle_token(ctx, ctx->shelf, cell); 
+                handle_token(ctx, ctx->shelf); 
                 ctx->shelf = ctl_counted_alloc(NULL, 0);
             }
             if(is_cmp(*p) || is_block(*p) || is_sep(*p)){
-                cell = handle_token(ctx, ctl_counted_alloc(p, 1), cell);
+                handle_token(ctx, ctl_counted_alloc(p, 1));
             }
         }
     }while(*++p != '\0');
@@ -171,7 +173,8 @@ int main(){
     printf("source\n%s\n---------------\n", sourcev);
 
     struct qrt_ctx *ctx = parse(sourcev);
-    print_sequence(ctx);
+
+    printout(ctx);
     /*exec(ctx);*/
     return 0;
 }
