@@ -12,31 +12,49 @@
 #include "core.c"
 #include "utils.c"
 #include "debug.c"
-
 QrtCtx *blocks(QrtCtx *ctx){
     QrtBlock *block = ctx->root;
     QrtBlock *newblock;
+   
     QrtCell *start = ctx->start;
     QrtCell *before = start;
     QrtCell *cell = before;
     QrtCell *next = cell;
+    Crray *stack = ctl_crray_alloc(16);
+    ctl_crray_push(stack, block);
+    Crray *list = ctl_crray_alloc(16);
+    ctl_crray_push(list, block);
+    
     while(cell){
         if(cell->value && cell->value->base.class == CLASS_BLOCK){
-            QrtBlock *newblock = (QrtBlock *)cell->value; 
-            QrtCell *insert = qrt_cell_alloc();
-            if(newblock->type == '{'){
-                insert->value = cell;  
-                insert->previous = cell->previous;
-                cell->previous->next = insert;
-                before = insert;
+            QrtBlock *new = (QrtBlock *)cell->value; 
+            QrtBlock *current;
+            QrtBlock *next;
+            ctl_crray_push(list, new);
+
+            CtlCounted *space = ctl_counted_alloc("hello", 5);
+            space->length = 0;
+            
+            if(new->type == '{'){
+                new->parent = block;
+                block->branch = new;
+                ctl_crray_push(stack, ctl_block_incr(new));
+                block = new;
             }else{
-                before->next = cell->next;
-                cell->next = NULL;   
-                cell = before->next;
-                continue;
+                ctl_crray_remove(stack,  -1);
+                next = ctl_crray_tail(stack);
+                current = next;
+                while((next = next->next)) current = next;
+                current->next = new;
+                new->parent = current;
+                block = new;
             }
+
         }
         cell = cell->next;
+    }
+    for(int i=0; i< list->length; i++){
+        print_block(list->content[i], ctl_counted_from_cstr("+ "));
     }
     return ctx;
 }
@@ -175,7 +193,7 @@ int main(){
     printf("source\n%s\n---------------\n", sourcev);
 
     struct qrt_ctx *ctx = parse(sourcev);
-    print_sequence(ctx);
+    /*print_sequence(ctx);*/
     printf("------sequence--------\n");
     ctx = blocks(ctx);
     print_blocks(ctx);

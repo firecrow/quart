@@ -1,2 +1,2 @@
 #!/bin/sh
-clang-9 -o run quart.c
+clang-9 -ggdb -o run quart.c

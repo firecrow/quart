@@ -1,3 +1,4 @@
+
 void qrt_out(void *_n){
     struct node *n = (struct node *)_n;
     CtlCounted *key = (CtlCounted *)n->key;
@@ -36,6 +37,25 @@ void print_node(struct qrt_cell *node, CtlCounted *space){
     );
 }
 
+void print_block(QrtBlock *block, CtlCounted *space){
+    if(space == NULL) space = ctl_counted_from_cstr("$$$");
+    char *node_value = ctl_counted_to_cstr(ctl_counted_format("%c", block->type));
+    int next_id = block->next != NULL ? block->next->base.id  : -1;
+    int prev_id = block->parent != NULL ? block->parent->base.id  : -1;
+    int class = block->base.class;
+    printf("%s<%s %s id:%d p:%d n:%d branch:%d>\n",
+        ctl_counted_to_cstr(space), "BLOCK", node_value, block->base.id, prev_id, next_id, block->branch != NULL
+    );
+}
+
+void printStack(Crray *stack){
+    printf("\nstack....................XXXXXXXXXXXXXXXXXXx\n");
+    for(int i=0; i < stack->length; i++){
+        print_block(stack->content[i], ctl_counted_from_cstr(""));
+    }
+    printf("stack....................END\n\n\n");
+}
+
 void print_sequence(QrtCtx *ctx){
     CtlCounted * space = ctl_counted_alloc("                ", 16);
     space->length = 0;
@@ -70,24 +90,17 @@ void print_blocks(QrtCtx *ctx){
     CtlCounted * space = ctl_counted_alloc("                ", 16);
     space->length = 0;
 
-    QrtCell *cell = ctx->start;
-    QrtCell *before;
+    Crray *stack = ctl_crray_alloc(16);
 
-    while(cell){
-        if(cell->value && cell->value->base.class == CLASS_CELL){
-            space->length+=4;
-            before = cell->next;
-            cell = (QrtCell *)cell->value;
+    QrtBlock *block = ctx->root;
+    QrtBlock *prev;
+    ctl_crray_push(stack, block);
+    while(block){
+        print_block(block, space);
+        if(block->branch){
+            printf(">>>");
+            print_block(block->branch, space);
         }
-        if(cell->value && cell->value->base.class == CLASS_BLOCK){
-            QrtBlock *block = (QrtBlock *)cell->value;
-            if(block->type == '}'){
-                cell = before;
-                before = NULL;
-                continue;
-            }
-        }
-        print_node(cell, space);
-        cell = cell->next;
-    }
+        block = block->next;
+    } 
 }

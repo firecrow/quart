@@ -21,6 +21,8 @@ struct qrt_statement;
 typedef struct qrt_block {
     struct base base;
     struct qrt_block *parent;
+    struct qrt_block *next;
+    struct qrt_block *branch;
     struct qrt_statement *statement_root;
     struct qrt_statement *statement_next;
     CtlTree *namespace;
@@ -116,10 +118,12 @@ QrtStatement *qrt_statement_alloc(QrtBlock *parent, QrtStatement *previous, stru
     return statement;
 }
 
+int qrt_block_id = 0;
 QrtBlock *qrt_block_alloc(char type, QrtBlock *parent){
     QrtBlock *block;
     ctl_xptr(block = malloc(sizeof(QrtBlock)));
     block->base.class = CLASS_BLOCK;
+    block->base.id =  ++qrt_block_id;
     block->namespace = ctl_tree_alloc(ctl_tree_counted_cmp);
     block->values = ctl_tree_alloc(ctl_tree_counted_cmp);
     block->statement_root = block->statement_next = qrt_statement_alloc(block, NULL, NULL);
@@ -139,3 +143,10 @@ struct qrt_ctx * qrt_ctx_alloc(){
     return ctx;
 }
 
+QrtBlock *ctl_block_incr(QrtBlock *block){
+    return (QrtBlock *)ctl_ref_incr((CtlAbs *)block);
+}
+
+QrtBlock *ctl_block_decr(QrtBlock *block){
+    return (QrtBlock *)ctl_ref_decr((CtlAbs *)block);
+}
