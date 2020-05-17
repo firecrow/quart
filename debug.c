@@ -31,8 +31,8 @@ void print_node(struct qrt_cell *node, CtlCounted *space){
         class = node->value->base.class;
         cell = (struct qrt_cell *)node->value;
     }
-    printf("%s<%s %s>\n",
-        ctl_counted_to_cstr(space), get_class_str((CtlAbs *)cell), node_value
+    printf("%s<%s %s id:%d pv:%d n:%d>\n",
+        ctl_counted_to_cstr(space), get_class_str((CtlAbs *)cell), node_value, node->base.id, prev_id, next_id 
     );
 }
 
@@ -44,4 +44,24 @@ void print_sequence(QrtCtx *ctx){
         print_node(cell, space);
     }while((cell = cell->next));
 
+}
+
+void print_branches(QrtCtx *ctx){
+    CtlCounted * space = ctl_counted_alloc("                ", 16);
+    space->length = 0;
+
+    QrtStatement *stmt = ctx->root->statement_root;
+
+    QrtCell *cell;
+    while(stmt){
+        printf("----------------------------------statement boundry ------------------------------\n");
+        cell = stmt->cell_root;
+        while(cell){
+            printf("X");
+            print_node(cell, space);
+            cell = cell->next;
+        }
+        
+        stmt = stmt->next;
+    }
 }

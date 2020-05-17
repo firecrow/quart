@@ -12,7 +12,6 @@ enum qrt_opp_types {
 typedef struct qrt_cell {
     struct base base;
     int status;
-    int id;
     CtlAbs *value;
     struct qrt_cell *next;
     struct qrt_cell *previous;
@@ -33,6 +32,7 @@ typedef struct qrt_statement {
     struct base base;
     struct qrt_block *parent;
     struct qrt_statement *previous;
+    struct qrt_statement *next;
     QrtCell *cell_root;
     QrtCell *cell_next;
 } QrtStatement;
@@ -104,10 +104,12 @@ struct qrt_cell *qrt_cell_alloc(){
     return node;
 }
 
+int qrt_statement_id=0;
 QrtStatement *qrt_statement_alloc(QrtBlock *parent, QrtStatement *previous, struct qrt_cell *root){
     QrtStatement *statement;
     ctl_xptr(statement = malloc(sizeof(QrtStatement)));
     statement->base.class = CLASS_STATEMENT;
+    statement->base.id = ++qrt_statement_id;
     statement->previous = previous;
     statement->parent = parent;
     statement->cell_root = statement->cell_next = root;

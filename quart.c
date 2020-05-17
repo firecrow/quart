@@ -13,52 +13,28 @@
 #include "utils.c"
 #include "debug.c"
 
-
-
-/*
-int printout(struct qrt_ctx * ctx){
-    QrtBlock *block = ctx->root;
-    QrtBlock *newblock = NULL;
-    QrtStatement *prev_statement;
-    struct qrt_cell *node = block->root->root;
-    CtlCounted *space = ctl_counted_alloc("                    ", 20);
-    struct qrt_cell *latest = node;
-    space->length = 0;
-
-    do {
-        printf("open\n");
-        if(node->value){
-            if(node->value->base.class == CLASS_BLOCK){
-                print_node(node, space);
-                newblock = node->value;
-                if(newblock->type == '{'){
-                   space->length+=4;
-                   print_node(newblock->root, space);
-                   node = newblock->root->root;
-                   continue;
-                }else{
-                   node = block->root->next;
-                   block = block->parent;
-                   space->length-= 4;
-                }
-            } 
-            if(node->value->base.class == CLASS_SEP){
-                QrtStatement *statement = qrt_statement_alloc(block, prev_statement, prev_statement->root->next);
-                prev_statement = statement;
-            }
-            printf("found statement 2\n");
+QrtCtx *branches(QrtCtx *ctx){
+    QrtStatement *stmt = ctx->root->statement_root;
+    QrtStatement *newstmt;
+    QrtCell *start = ctx->start;
+    QrtCell *before = start;
+    QrtCell *cell = before;
+    stmt->next = qrt_statement_alloc(NULL, stmt, before);
+    while(cell){
+        if(is_break_value(cell->value)){
+            printf("from %d to %d\n", before->base.id, cell->base.id);
+            newstmt = qrt_statement_alloc(NULL, stmt, before);
+            stmt->next = newstmt;
+            stmt = newstmt;
+            before = cell->next;
+            cell->next = NULL;
+            cell = before;
+            continue;
         }
-        if(!node){
-            break;
-        }
-        printf("found statement 3\n");
-        print_node(node, space);
-    }while(node && (node = node->next));
-    printf("\x1b[35m---------------------------------------------\x1b[0m\n");
-    return 0;
-
+        cell = cell->next;
+    }
+    return ctx;
 }
-*/
 
 enum classes identify_token(CtlCounted *token){
     int i = 0;
@@ -172,6 +148,8 @@ int main(){
 
     struct qrt_ctx *ctx = parse(sourcev);
     print_sequence(ctx);
+    ctx = branches(ctx);
+    print_branches(ctx);
     /*exec(ctx);*/
     return 0;
 }
