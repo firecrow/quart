@@ -147,7 +147,7 @@ int main(){
     printf("source\n%s\n---------------\n", sourcev);
 
     struct qrt_ctx *ctx = parse(sourcev);
-    print_sequence(ctx);
+    /*print_sequence(ctx);*/
     ctx = branches(ctx);
     print_branches(ctx);
     /*exec(ctx);*/
