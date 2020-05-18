@@ -49,12 +49,20 @@ QrtCtx *blocks(QrtCtx *ctx){
                 while((next = next->next)) current = next;
                 current->next = new;
                 new->parent = current;
+
+                newstmt = qrt_statement_alloc(block, stmt, before);
+                if(block->statement_root == NULL){
+                    block->statement_root = block->statement_next = newstmt;
+                }else{
+                    block->statement_next->next =  newstmt;
+                }
                 stmt = block->statement_root;
                 block = new;
 
                 before = cell->next;
                 cell->next = NULL;
                 cell = before;
+                stmt->cell_root = cell;
                 continue;
             }
 
