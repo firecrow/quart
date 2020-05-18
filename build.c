@@ -51,6 +51,11 @@ QrtCtx *blocks(QrtCtx *ctx){
                 new->parent = current;
                 stmt = block->statement_root;
                 block = new;
+
+                before = cell->next;
+                cell->next = NULL;
+                cell = before;
+                continue;
             }
 
         }

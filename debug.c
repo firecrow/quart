@@ -69,6 +69,15 @@ void print_block(QrtBlock *block, CtlCounted *space, int statements){
     int prev_id = block->parent != NULL ? block->parent->base.id  : -1;
     int branch_id = block->branch != NULL ? block->branch->base.id  : -1;
     int class = block->base.class;
+
+    CtlTreeIter *iter = ctl_tree_iter(block->namespace);
+    if(iter->size(iter)){
+        CtlTreeNode *node = NULL;
+        while((node = iter->next(iter)) != NULL){
+            printf("\x1b[33m(%s):%s\x1b[0m\n", ctl_counted_to_cstr(node->key), get_class_str((CtlAbs *)node->data));
+        }
+    }
+
     printf("%s|%s id:%d p:%d n:%d branch:%d|\n",
         ctl_counted_to_cstr(space), block->type == '{' ? "BLOCK" : "BCELL", block->base.id, prev_id, next_id, branch_id 
     );

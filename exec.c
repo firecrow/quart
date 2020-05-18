@@ -24,6 +24,7 @@ CtlAbs *exec_expressions(QrtBlock *block, QrtStatement *stmt){
                     }else if(follows->base.class == CLASS_BLOCK){
                         follows = asQrtBlock(next->next->value);
                         symbol->value = follows;    
+                        ctl_tree_insert(block->namespace, symbol->name, follows);
                     }
                     next->next = next->next->next;
                 }
