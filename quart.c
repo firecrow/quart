@@ -27,18 +27,8 @@ QrtCtx *blocks(QrtCtx *ctx){
     QrtStatement *newstmt;
     
     QrtStatement *stmt = block->statement_root;
-    stmt->cell_root = cell; 
+    stmt->cell_root = stmt->cell_next = cell; 
     while(cell){
-        if(is_break_value(cell->value)){
-            newstmt = qrt_statement_alloc(NULL, stmt, before);
-            stmt->next = newstmt;
-            stmt = newstmt;
-            before = cell->next;
-            cell->next = NULL;
-            cell = before;
-            if(!cell) 
-                break;
-        }
         if(cell->value && cell->value->base.class == CLASS_BLOCK){
             QrtBlock *new = (QrtBlock *)cell->value; 
             QrtBlock *current;
@@ -49,8 +39,6 @@ QrtCtx *blocks(QrtCtx *ctx){
             space->length = 0;
             
             if(new->type == '{'){
-                stmt = new->statement_root;
-                stmt->cell_root = cell;
                 new->parent = block;
                 block->branch = new;
                 ctl_crray_push(stack, ctl_block_incr(new));
@@ -67,36 +55,28 @@ QrtCtx *blocks(QrtCtx *ctx){
             }
 
         }
-        cell = cell->next;
-    }
-    for(int i=0; i< list->length; i++){
-        print_block(list->content[i], ctl_counted_from_cstr("+ "));
-    }
-    return ctx;
-}
-
-/*
-QrtCtx *statements(QrtBlock *block){
-    QrtStatement *stmt = block->statement_root;
-    QrtStatement *newstmt;
-    QrtCell *start = ctx->start;
-    QrtCell *before = start;
-    QrtCell *cell = before;
-    while(cell){
         if(is_break_value(cell->value)){
-            newstmt = qrt_statement_alloc(NULL, stmt, before);
-            stmt->next = newstmt;
-            stmt = newstmt;
-            before = cell->next;
-            cell->next = NULL;
-            cell = before;
-            continue;
+            if(cell->value && cell->value->base.class == CLASS_BLOCK){
+                before = cell->next;
+                cell->next = NULL;
+                cell = before;
+                newstmt = qrt_statement_alloc(block, stmt, before);
+                block->statement_next->next =  newstmt;
+                block->statement_next = newstmt;
+                stmt = newstmt;
+                continue;
+            }
         }
         cell = cell->next;
     }
+    /*
+    for(int i=0; i< list->length; i++){
+        print_block(list->content[i], ctl_counted_from_cstr("+ "));
+    }
+    */
     return ctx;
 }
-*/
+
 
 enum classes identify_token(CtlCounted *token){
     int i = 0;
@@ -210,7 +190,6 @@ int main(){
 
     struct qrt_ctx *ctx = parse(sourcev);
     /*print_sequence(ctx);*/
-    printf("------sequence--------\n");
     ctx = blocks(ctx);
     print_blocks(ctx);
     /*statements(ctx)*/
