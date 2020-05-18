@@ -149,3 +149,17 @@ QrtBlock *ctl_block_incr(QrtBlock *block){
 QrtBlock *ctl_block_decr(QrtBlock *block){
     return (QrtBlock *)ctl_ref_decr((CtlAbs *)block);
 }
+
+QrtSymbol *asQrtSymbol(CtlAbs *x){
+    if(x->base.class != CLASS_SYMBOL && x->base.class != CLASS_DEFINE){
+        ctl_xerrlog("asQrtSymbol of an object not of class CLASS_SYMBOL or CLASS_DEFINE");
+    }
+    return (QrtSymbol *)x; 
+}
+
+QrtCell *asQrtCell(CtlAbs *x){
+    if(x->base.class != CLASS_CELL){
+        ctl_xerrlog("asQrtCell of an object not of class CLASS_SYMBOL or CLASS_DEFINE");
+    }
+    return (QrtCell *)x; 
+}

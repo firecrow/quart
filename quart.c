@@ -13,6 +13,7 @@
 #include "utils.c"
 #include "debug.c"
 #include "build.c"
+#include "exec.c"
 
 
 int main(){
@@ -21,6 +22,7 @@ int main(){
     printf("source\n%s\n---------------\n", sourcev);
 
     QrtCtx *ctx = build(sourcev);
+    CtlAbs *reg = exec(ctx);
     print_blocks(ctx);
     return 0;
 }

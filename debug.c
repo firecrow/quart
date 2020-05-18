@@ -7,6 +7,7 @@ void qrt_out(void *_n){
 }
 
 void print_node(struct qrt_cell *node, CtlCounted *space){
+    if(space == NULL) space = ctl_counted_from_cstr("");
     char *node_value = "";
     int next_id = node->next != NULL ? node->next->base.id  : -1;
     int prev_id = node->previous != NULL ? node->previous->base.id  : -1;
