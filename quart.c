@@ -23,7 +23,7 @@ int main(){
     printf("source\n%s\n---------------\n",s);
 
     QrtCtx *ctx = build(s);
-    /*CtlAbs *reg = exec(ctx);*/
+    CtlAbs *reg = exec(ctx);
     print_blocks(ctx);
     return 0;
 }

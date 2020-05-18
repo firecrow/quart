@@ -17,16 +17,19 @@ CtlAbs *exec_expressions(QrtBlock *block, QrtStatement *stmt){
                 if(next->next && next->next->value){
                     follows = asQrtCell(next->next)->value;
                     if(follows->base.class == CLASS_INT){
-                        symbol->value = follows;    
                         if(symbol->is_define){
+                            symbol->value = follows;    
                             ctl_tree_insert(block->namespace, symbol->name, follows);
+                            next->next = next->next->next;
                         }
                     }else if(follows->base.class == CLASS_BLOCK){
                         follows = asQrtBlock(next->next->value);
-                        symbol->value = follows;    
-                        ctl_tree_insert(block->namespace, symbol->name, follows);
+                        if(symbol->is_define){
+                            symbol->value = follows;    
+                            ctl_tree_insert(block->namespace, symbol->name, follows);
+                            next->next = next->next->next;
+                        }
                     }
-                    next->next = next->next->next;
                 }
             }
         }
