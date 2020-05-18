@@ -24,8 +24,21 @@ QrtCtx *blocks(QrtCtx *ctx){
     ctl_crray_push(stack, block);
     Crray *list = ctl_crray_alloc(16);
     ctl_crray_push(list, block);
+    QrtStatement *newstmt;
     
+    QrtStatement *stmt = block->statement_root;
+    stmt->cell_root = cell; 
     while(cell){
+        if(is_break_value(cell->value)){
+            newstmt = qrt_statement_alloc(NULL, stmt, before);
+            stmt->next = newstmt;
+            stmt = newstmt;
+            before = cell->next;
+            cell->next = NULL;
+            cell = before;
+            if(!cell) 
+                break;
+        }
         if(cell->value && cell->value->base.class == CLASS_BLOCK){
             QrtBlock *new = (QrtBlock *)cell->value; 
             QrtBlock *current;
@@ -36,6 +49,8 @@ QrtCtx *blocks(QrtCtx *ctx){
             space->length = 0;
             
             if(new->type == '{'){
+                stmt = new->statement_root;
+                stmt->cell_root = cell;
                 new->parent = block;
                 block->branch = new;
                 ctl_crray_push(stack, ctl_block_incr(new));
@@ -47,6 +62,7 @@ QrtCtx *blocks(QrtCtx *ctx){
                 while((next = next->next)) current = next;
                 current->next = new;
                 new->parent = current;
+                stmt = block->statement_root;
                 block = new;
             }
 
