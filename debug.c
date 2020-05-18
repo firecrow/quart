@@ -28,6 +28,9 @@ void print_node(struct qrt_cell *node, CtlCounted *space){
                 if(value->base.class == CLASS_INT){
                     node_value = ctl_counted_to_cstr(ctl_counted_format("%s %d", node_value, asCtlInt(value)->value));
                 }
+                if(value->base.class == CLASS_BLOCK){
+                    node_value = ctl_counted_to_cstr(ctl_counted_format("%s %c", node_value, asQrtBlock(value)->type));
+                }
             }
         }
         class = node->value->base.class;

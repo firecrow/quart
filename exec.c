@@ -20,10 +20,12 @@ CtlAbs *exec_expressions(QrtBlock *block, QrtStatement *stmt){
                         symbol->value = follows;    
                         if(symbol->is_define){
                             ctl_tree_insert(block->namespace, symbol->name, follows);
-                            /* skip this cell*/
-                            next->next = next->next->next;
                         }
+                    }else if(follows->base.class == CLASS_BLOCK){
+                        follows = asQrtBlock(next->next->value);
+                        symbol->value = follows;    
                     }
+                    next->next = next->next->next;
                 }
             }
         }
@@ -33,10 +35,8 @@ CtlAbs *exec_expressions(QrtBlock *block, QrtStatement *stmt){
 
 CtlAbs *exec_statements(QrtBlock *block){
     /* if/else etc */
-    printf("hello\n");
     QrtStatement *stmt =  block->statement_root;
     while(stmt){
-        printf(";\n");
         exec_expressions(block, stmt);
         stmt = stmt->next;
     }

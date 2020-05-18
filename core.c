@@ -163,3 +163,10 @@ QrtCell *asQrtCell(CtlAbs *x){
     }
     return (QrtCell *)x; 
 }
+
+QrtBlock *asQrtBlock(CtlAbs *x){
+    if(x->base.class != CLASS_BLOCK){
+        ctl_xerrlog("asQrtBlock of an object not of class CLASS_BLOCK");
+    }
+    return (QrtBlock *)x; 
+}
