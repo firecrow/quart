@@ -126,7 +126,6 @@ QrtBlock *qrt_block_alloc(char type, QrtBlock *parent){
     block->base.id =  ++qrt_block_id;
     block->namespace = ctl_tree_alloc(ctl_tree_counted_cmp);
     block->values = ctl_tree_alloc(ctl_tree_counted_cmp);
-    block->statement_root = block->statement_next = qrt_statement_alloc(block, NULL, NULL);
     block->type = type;
     return block;
 }

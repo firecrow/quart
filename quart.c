@@ -26,8 +26,8 @@ QrtCtx *blocks(QrtCtx *ctx){
     ctl_crray_push(list, block);
     QrtStatement *newstmt;
     
-    QrtStatement *stmt = block->statement_root;
-    stmt->cell_root = stmt->cell_next = cell; 
+    QrtStatement *stmt = qrt_statement_alloc(block, NULL, cell);
+    block->statement_root = stmt;
     while(cell){
         if(cell->value && cell->value->base.class == CLASS_BLOCK){
             QrtBlock *new = (QrtBlock *)cell->value; 
@@ -43,6 +43,20 @@ QrtCtx *blocks(QrtCtx *ctx){
                 block->branch = new;
                 ctl_crray_push(stack, ctl_block_incr(new));
                 block = new;
+
+                before = cell->next;
+                cell->next = NULL;
+                cell = before;
+                newstmt = qrt_statement_alloc(block, stmt, before);
+                printf("%d newstmt\n", newstmt->base.id);
+                if(block->statement_root == NULL){
+                    block->statement_root = block->statement_next = newstmt;
+                }else{
+                    block->statement_next->next =  newstmt;
+                }
+                block->statement_next = newstmt;
+                stmt = newstmt;
+                continue;
             }else{
                 ctl_crray_remove(stack,  -1);
                 next = ctl_crray_tail(stack);
@@ -56,16 +70,18 @@ QrtCtx *blocks(QrtCtx *ctx){
 
         }
         if(is_break_value(cell->value)){
-            if(cell->value && cell->value->base.class == CLASS_BLOCK){
-                before = cell->next;
-                cell->next = NULL;
-                cell = before;
-                newstmt = qrt_statement_alloc(block, stmt, before);
-                block->statement_next->next =  newstmt;
-                block->statement_next = newstmt;
-                stmt = newstmt;
-                continue;
+        /*
+                    before = cell->next;
+                    cell->next = NULL;
+                    cell = before;
+                    newstmt = qrt_statement_alloc(block, stmt, before);
+                    block->statement_next->next =  newstmt;
+                    block->statement_next = newstmt;
+                    stmt = newstmt;
+                    continue;
+                }
             }
+        */
         }
         cell = cell->next;
     }
