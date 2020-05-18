@@ -27,7 +27,7 @@ QrtCtx *blocks(QrtCtx *ctx){
     QrtStatement *newstmt;
     
     QrtStatement *stmt = qrt_statement_alloc(block, NULL, cell);
-    block->statement_root = stmt;
+    block->statement_root = block->statement_next = stmt;
     while(cell){
         if(cell->value && cell->value->base.class == CLASS_BLOCK){
             QrtBlock *new = (QrtBlock *)cell->value; 
@@ -48,7 +48,6 @@ QrtCtx *blocks(QrtCtx *ctx){
                 cell->next = NULL;
                 cell = before;
                 newstmt = qrt_statement_alloc(block, stmt, before);
-                printf("%d newstmt\n", newstmt->base.id);
                 if(block->statement_root == NULL){
                     block->statement_root = block->statement_next = newstmt;
                 }else{
@@ -70,18 +69,17 @@ QrtCtx *blocks(QrtCtx *ctx){
 
         }
         if(is_break_value(cell->value)){
-        /*
-                    before = cell->next;
-                    cell->next = NULL;
-                    cell = before;
-                    newstmt = qrt_statement_alloc(block, stmt, before);
-                    block->statement_next->next =  newstmt;
-                    block->statement_next = newstmt;
-                    stmt = newstmt;
-                    continue;
-                }
+            before = cell->next;
+            cell->next = NULL;
+            cell = before;
+            newstmt = qrt_statement_alloc(block, stmt, before);
+            if(block->statement_root == NULL){
+                block->statement_root = block->statement_next = newstmt;
+            }else{
+                block->statement_next->next = newstmt;
             }
-        */
+            block->statement_next = newstmt;
+            continue;
         }
         cell = cell->next;
     }
