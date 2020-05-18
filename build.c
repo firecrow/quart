@@ -33,7 +33,7 @@ QrtCtx *blocks(QrtCtx *ctx){
                 before = cell->next;
                 cell->next = NULL;
                 cell = before;
-                newstmt = qrt_statement_alloc(block, stmt, before);
+                newstmt = qrt_statement_alloc(block, NULL, before);
                 if(block->statement_root == NULL){
                     block->statement_root = block->statement_next = newstmt;
                 }else{
@@ -50,20 +50,21 @@ QrtCtx *blocks(QrtCtx *ctx){
                 current->next = new;
                 new->parent = current;
 
-                newstmt = qrt_statement_alloc(block, stmt, before);
+                block = new;
+                newstmt = qrt_statement_alloc(block, NULL, before);
                 if(block->statement_root == NULL){
                     block->statement_root = block->statement_next = newstmt;
                 }else{
                     block->statement_next->next =  newstmt;
                 }
-                stmt = block->statement_root;
-                block = new;
 
+                stmt = block->statement_root;
                 before = cell->next;
                 cell->next = NULL;
                 cell = before;
                 stmt->cell_root = cell;
                 continue;
+
             }
 
         }
