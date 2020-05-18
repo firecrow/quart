@@ -32,12 +32,27 @@ void print_node(struct qrt_cell *node, CtlCounted *space){
         class = node->value->base.class;
         cell = (struct qrt_cell *)node->value;
     }
-    printf("%s<%s %s id:%d pv:%d n:%d>\n",
+    printf("%s<%s \x1b[33m%s\x1b[0m id:%d pv:%d n:%d>\n",
         ctl_counted_to_cstr(space), get_class_str((CtlAbs *)cell), node_value, node->base.id, prev_id, next_id 
     );
 }
 
-void print_block(QrtBlock *block, CtlCounted *space){
+void print_statements(QrtBlock *block, CtlCounted *space){
+    QrtStatement *stmt =  block->statement_root;
+    QrtCell *next;
+
+        stmt = block->statement_root;
+        while(stmt){
+            next =  stmt->cell_root;
+            while(next){
+                print_node(next, space);
+                next =  next->next;
+            }
+            stmt = stmt->next;
+        }
+}
+
+void print_block(QrtBlock *block, CtlCounted *space, int statements){
     if(space == NULL) space = ctl_counted_from_cstr("$$$");
     char *node_value = ctl_counted_to_cstr(ctl_counted_format("%c", block->type));
     int next_id = block->next != NULL ? block->next->base.id  : -1;
@@ -47,12 +62,15 @@ void print_block(QrtBlock *block, CtlCounted *space){
     printf("%s|%s id:%d p:%d n:%d branch:%d|\n",
         ctl_counted_to_cstr(space), block->type == '{' ? "BLOCK" : "BCELL", block->base.id, prev_id, next_id, branch_id 
     );
+    if(statements){
+        print_statements(block, space);
+    }
 }
 
 void printStack(Crray *stack){
     printf("\nstack....................XXXXXXXXXXXXXXXXXXx\n");
     for(int i=0; i < stack->length; i++){
-        print_block(stack->content[i], ctl_counted_from_cstr(""));
+        print_block(stack->content[i], ctl_counted_from_cstr(""), 0);
     }
     printf("stack....................END\n\n\n");
 }
@@ -90,34 +108,20 @@ void print_branches(QrtCtx *ctx){
 void print_blocks(QrtCtx *ctx){
     CtlCounted * space = ctl_counted_alloc("                ", 16);
     space->length = 0;
-
     Crray *stack = ctl_crray_alloc(16);
-
     QrtBlock *block = ctx->root;
-    QrtStatement *stmt =  block->statement_root;
     QrtBlock *prev;
     QrtBlock *current;
-    QrtCell *next;
     ctl_crray_push(stack, block);
     while(block){
-        print_block(block, space);
-        stmt = block->statement_root;
-        while(stmt){
-            printf(";;;;;\n");
-            next =  stmt->cell_root;
-            while(next){
-                print_node(next, space);
-                next =  next->next;
-            }
-            stmt = stmt->next;
-        }
+        print_block(block, space, 1);
         if(block->branch){
             space->length += 4;
             ctl_crray_push(stack, block);
             block = block->branch;
             if(block->branch)
                 continue;
-            print_block(block, space);
+            print_block(block, space, 1);
         }
         if(block->next == NULL && stack->length > 1){
             space->length -= 4;
