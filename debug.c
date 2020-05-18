@@ -37,19 +37,25 @@ void print_node(struct qrt_cell *node, CtlCounted *space){
     );
 }
 
+void print_stmt(QrtStatement *stmt, CtlCounted *space){
+    printf("%s; %d\n",
+        ctl_counted_to_cstr(space), stmt->base.id 
+    );
+}
+
 void print_statements(QrtBlock *block, CtlCounted *space){
     QrtStatement *stmt =  block->statement_root;
     QrtCell *next;
-
-        stmt = block->statement_root;
-        while(stmt){
-            next =  stmt->cell_root;
-            while(next){
-                print_node(next, space);
-                next =  next->next;
-            }
-            stmt = stmt->next;
+    stmt = block->statement_root;
+    while(stmt){
+        print_stmt(stmt, space);
+        next =  stmt->cell_root;
+        while(next){
+            print_node(next, space);
+            next =  next->next;
         }
+        stmt = stmt->next;
+    }
 }
 
 void print_block(QrtBlock *block, CtlCounted *space, int statements){
