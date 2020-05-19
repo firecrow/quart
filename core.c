@@ -38,6 +38,7 @@ typedef struct qrt_statement {
     QrtCell *cell_lead;
     QrtCell *cell_root;
     QrtCell *cell_next;
+    CtlAbs * reg;
 } QrtStatement;
 
 typedef struct qrt_ctx {
