@@ -172,3 +172,25 @@ QrtBlock *asQrtBlock(CtlAbs *x){
     }
     return (QrtBlock *)x; 
 }
+
+typedef struct qrt_mapper {
+    struct base base;
+    CtlAbs *(*onBlock)(QrtBlock *block);
+    CtlAbs *(*onStatement)(QrtStatement *stmt);
+    CtlAbs *(*onCell)(QrtCell *cell);
+}QrtMapper;
+
+
+QrtMapper *qrt_mapper_alloc(QrtCtx *ctx,
+            CtlAbs *(*onBlock)(QrtBlock *block),
+            CtlAbs *(*onStatement)(QrtStatement *stmt),
+            CtlAbs *(*onCell)(QrtCell *cell)
+        ){
+    struct qrt_mapper *mapper;
+    ctl_xptr(mapper = malloc(sizeof(struct qrt_mapper)));
+    bzero(mapper, sizeof(struct qrt_mapper));
+    mapper->base.class = CLASS_UNDEFINED;
+    mapper->onBlock = onBlock;
+    mapper->onStatement = onStatement;
+    mapper->onCell = onCell;
+}
