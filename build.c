@@ -1,21 +1,29 @@
+CtlAbs *get_following_value(QrtCell *cell){
+    if(cell->next && cell->next->value)
+        return asQrtCell(cell->next)->value;
+            
+}
+QrtCell *break_chain_cell(QrtCell *cell){
+   QrtCell *next;
+    next = cell->next;
+    cell->next = NULL;
+    return next;
+}
+
 void consolidate_value(QrtBlock *block, QrtCell *cell, int skip){
-    CtlAbs *follows;
     if(cell->value && cell->value->base.class == CLASS_SYMBOL){
         QrtSymbol *symbol = asQrtSymbol(cell->value);
-        if(cell->next && cell->next->value){
-            follows = asQrtCell(cell->next)->value;
-            if(follows->base.class == CLASS_INT){
+        symbol->value = get_following_value(cell);
+        if(symbol->value){
+            if(asCtlInt(symbol->value)){
                 if(symbol->is_define){
-                    symbol->value = follows;
-                    ctl_tree_insert(block->namespace, symbol->name, follows);
+                    ctl_tree_insert(block->namespace, symbol->name, symbol->value);
                     if(!skip)
                         cell->next = cell->next->next;
                 }
-            }else if(follows->base.class == CLASS_BLOCK){
-                follows = asQrtBlock(cell->next->value);
+            }else if(asQrtBlock(symbol->value)){
                 if(symbol->is_define){
-                    symbol->value = follows;    
-                    ctl_tree_insert(block->namespace, symbol->name, follows);
+                    ctl_tree_insert(block->namespace, symbol->name, symbol->value);
                     if(!skip)
                         cell->next = cell->next->next;
                 }
@@ -29,7 +37,6 @@ CtlAbs *build_expressions(QrtBlock *block, QrtStatement *stmt){
     /* assign symbol values */
     /* operators ! + * */
     QrtCell *next = stmt->cell_root;
-    QrtCell *before;
     while(block){
         if(block->type == '{')
             break;
@@ -38,9 +45,7 @@ CtlAbs *build_expressions(QrtBlock *block, QrtStatement *stmt){
     if(next){
         consolidate_value(block, next, 1);
         stmt->cell_lead = next;
-        before = next->next;
-        next->next = NULL;
-        next = stmt->cell_root = before; 
+        next = stmt->cell_root = break_chain_cell(next);
     }
     while(next){
         if(next->value){
@@ -89,8 +94,7 @@ QrtCtx *blocks(QrtCtx *ctx){
     QrtBlock *newblock;
    
     QrtCell *start = ctx->start;
-    QrtCell *before = start;
-    QrtCell *cell = before;
+    QrtCell *cell = start;
     QrtCell *next = cell;
     Crray *stack = ctl_crray_alloc(16);
     ctl_crray_push(stack, block);
@@ -116,10 +120,8 @@ QrtCtx *blocks(QrtCtx *ctx){
                 ctl_crray_push(stack, ctl_block_incr(new));
                 block = new;
 
-                before = cell->next;
-                cell->next = NULL;
-                cell = before;
-                newstmt = qrt_statement_alloc(block, NULL, before);
+                cell = break_chain_cell(cell);
+                newstmt = qrt_statement_alloc(block, NULL, cell);
                 if(block->statement_root == NULL){
                     block->statement_root = block->statement_next = newstmt;
                 }else{
@@ -137,7 +139,7 @@ QrtCtx *blocks(QrtCtx *ctx){
                 new->parent = current;
 
                 block = new;
-                newstmt = qrt_statement_alloc(block, NULL, before);
+                newstmt = qrt_statement_alloc(block, NULL, cell);
                 if(block->statement_root == NULL){
                     block->statement_root = block->statement_next = newstmt;
                 }else{
@@ -145,9 +147,9 @@ QrtCtx *blocks(QrtCtx *ctx){
                 }
 
                 stmt = block->statement_root;
-                before = cell->next;
-                cell->next = NULL;
-                cell = before;
+
+
+                cell = break_chain_cell(cell);
                 stmt->cell_root = cell;
                 continue;
 
@@ -155,10 +157,8 @@ QrtCtx *blocks(QrtCtx *ctx){
 
         }
         if(is_break_value(cell->value)){
-            before = cell->next;
-            cell->next = NULL;
-            cell = before;
-            newstmt = qrt_statement_alloc(block, stmt, before);
+            cell = break_chain_cell(cell);
+            newstmt = qrt_statement_alloc(block, stmt, cell);
             if(block->statement_root == NULL){
                 block->statement_root = block->statement_next = newstmt;
             }else{
