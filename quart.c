@@ -12,6 +12,7 @@
 #include "core.c"
 #include "utils.c"
 #include "debug.c"
+#include "parse.c"
 #include "build.c"
 #include "exec.c"
 
@@ -25,7 +26,7 @@ int main(){
 
     QrtCtx *ctx = build(v);
     /*CtlAbs *reg = exec(ctx);*/
-    /*print_blocks(ctx);*/
-    exec(ctx);
+    print_blocks(ctx);
+    /*exec(ctx);*/
     return 0;
 }

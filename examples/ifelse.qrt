@@ -1,0 +1,20 @@
+{
+    :show {
+            .run true
+            .i 10
+            :content
+            write content
+            while { run }{
+                write "."
+                &run &i - 1 < 0
+            }
+        }
+
+    if { x < 10 }{
+         &y a and 10 or 4
+      }
+
+
+    show :content "hi my name is sam"
+
+} :args argv

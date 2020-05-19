@@ -1,0 +1,17 @@
+x parse into blocks->statements->cells by type
+
+> statements  head->tail...
+   > predicence tree
+        ()!<>*/%+- or and
+control  whileif elif else
+calling blocks
+
+- refactor parsing and data types
+
+types:
+    int
+    string
+    array
+    set
+
+    truthiness

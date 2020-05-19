@@ -1,3 +1,79 @@
+CtlAbs *build_expressions(QrtBlock *block, QrtStatement *stmt){
+    /* sum up and return a value */
+    /* assign symbol values */
+    /* operators ! + * */
+    QrtCell *next = stmt->cell_root;
+    CtlAbs *follows;
+    while(block){
+        if(block->type == '{')
+            break;
+         block = block->parent;
+    }
+    if(next){
+        stmt->cell_lead = next;
+        next = stmt->cell_root = next->next;
+    }
+    while(next){
+        if(next->value){
+            if(next->value->base.class == CLASS_SYMBOL){
+                QrtSymbol *symbol = asQrtSymbol(next->value);
+                if(next->next && next->next->value){
+                    follows = asQrtCell(next->next)->value;
+                    if(follows->base.class == CLASS_INT){
+                        if(symbol->is_define){
+                            symbol->value = follows;    
+                            ctl_tree_insert(block->namespace, symbol->name, follows);
+                            next->next = next->next->next;
+                        }
+                    }else if(follows->base.class == CLASS_BLOCK){
+                        follows = asQrtBlock(next->next->value);
+                        if(symbol->is_define){
+                            symbol->value = follows;    
+                            ctl_tree_insert(block->namespace, symbol->name, follows);
+                            next->next = next->next->next;
+                        }
+                    }
+                }
+            }
+        }
+        next = next->next;
+    }
+}
+
+CtlAbs *build_statements(QrtBlock *block){
+    /* if/else etc */
+    QrtStatement *stmt =  block->statement_root;
+    while(stmt){
+        build_expressions(block, stmt);
+        stmt = stmt->next;
+    }
+
+}
+
+CtlAbs *pre_proc(QrtCtx *ctx){
+    Crray *stack = ctl_crray_alloc(16);
+    QrtBlock *block = ctx->root;
+    QrtBlock *prev;
+    QrtBlock *current;
+    ctl_crray_push(stack, block);
+    while(block){
+        build_statements(block);
+        if(block->branch){
+            ctl_crray_push(stack, block);
+            block = block->branch;
+            if(block->branch)
+                continue;
+            build_statements(block);
+        }
+        if(block->next == NULL && stack->length > 1){
+            prev = ctl_crray_pop(stack, -1); 
+            block = prev;
+        }
+        block = block->next;
+    } 
+}
+
+
 QrtCtx *blocks(QrtCtx *ctx){
     QrtBlock *block = ctx->root;
     QrtBlock *newblock;
@@ -89,189 +165,6 @@ QrtCtx *blocks(QrtCtx *ctx){
     }
     */
     return ctx;
-}
-
-
-enum classes identify_token(CtlCounted *token){
-    int i = 0;
-    char c; 
-    int class = CLASS_NULL;
-    for(int i = 0; i < token->length; i++){
-        c = token->data[i]; 
-        if(i == 0){
-            if(is_numeric(c)){
-                class = CLASS_INT;
-            } 
-            if(is_alpha(c)){
-                class = CLASS_SYMBOL;
-            }
-            if(c == ':'){
-                class = CLASS_DEFINE;
-                continue;
-            }
-            if(c == '"'){
-                class = CLASS_COUNTED;
-                if(token->data[token->length-1] != '"')
-                    return CLASS_INVALID;
-                continue;
-            }
-            if(is_cmp(c)){
-                return CLASS_OPP;
-            } 
-            if(c == '{' || c == '}'){
-                return CLASS_BLOCK;
-            }
-            if(c == ';' || c == '\n'){
-                return CLASS_SEP;
-            }
-        }
-        if(class == CLASS_INT){
-            if(!is_numeric(c)){
-                return CLASS_INVALID;
-            }
-        }
-        if(class == CLASS_SYMBOL || class == CLASS_DEFINE){
-            if(!is_alpha_numeric(c)){
-                return CLASS_INVALID;
-            }
-        }
-        if(class == CLASS_COUNTED){
-            if(c == '"' && token->data[i-1] != '\\' && i != token->length-1)
-                continue;
-            return CLASS_INVALID;
-
-        }
-    }
-    return class;
-}
-
-QrtCell *sequence_tokens(struct qrt_ctx *ctx, CtlCounted *name, QrtCell *current){
-    struct qrt_cell *node = qrt_cell_alloc();
-    enum classes token_type = identify_token(name);
-    if(token_type == CLASS_OPP){
-        node->value = (CtlAbs *)qrt_opp_alloc(name->data[0]); 
-    }else if(token_type == CLASS_BLOCK){
-        node->value = (CtlAbs *)qrt_block_alloc(name->data[0], NULL); 
-    }else if(token_type == CLASS_INT){
-        node->value = (CtlAbs *)ctl_int_alloc(atoi(ctl_counted_to_cstr(name)));
-    }else if(token_type == CLASS_SEP){
-        node->value = (CtlAbs *)qrt_sep_alloc();
-    }else if(token_type == CLASS_COUNTED){
-        node->value = (CtlAbs *)name;
-    }else if(token_type == CLASS_SYMBOL || token_type == CLASS_DEFINE){
-        QrtSymbol *symbol = qrt_symbol_alloc(node, token_type == CLASS_DEFINE); 
-        symbol->name = name;
-        node->value = (CtlAbs *)symbol; 
-    }
-
-    current->next = node;
-    node->previous = current;
-    return node;
-}
-
-struct qrt_ctx *parse(char *source){
-    char *p = source;
-    struct qrt_ctx *ctx = qrt_ctx_alloc();
-    ctx->shelf = ctl_counted_alloc(NULL, 0);
-    struct qrt_cell *cell = qrt_cell_alloc();
-    ctx->start = cell;
-
-    if(p == '\0') 
-        return NULL;
-    do {
-        if(*p == ':'){
-            ctl_counted_push(ctx->shelf, p, 1);
-        }else{
-            if((ctx->shelf->length == 0 && is_alpha(*p)) || is_alpha_numeric(*p)){
-                ctl_counted_push(ctx->shelf, p, 1);
-            }else if(ctx->shelf->length > 0){
-                cell = sequence_tokens(ctx, ctx->shelf, cell); 
-                ctx->shelf = ctl_counted_alloc(NULL, 0);
-            }
-            if(is_cmp(*p) || is_block(*p) || is_sep(*p)){
-                cell = sequence_tokens(ctx, ctl_counted_alloc(p, 1), cell);
-            }
-        }
-    }while(*++p != '\0');
-    return ctx;
-}
-
-
-
-
-CtlAbs *build_expressions(QrtBlock *block, QrtStatement *stmt){
-    /* sum up and return a value */
-    /* assign symbol values */
-    /* operators ! + * */
-    QrtCell *next = stmt->cell_root;
-    CtlAbs *follows;
-    while(block){
-        if(block->type == '{')
-            break;
-         block = block->parent;
-    }
-    if(next){
-        stmt->cell_lead = next;
-        next = stmt->cell_root = next->next;
-    }
-    while(next){
-        if(next->value){
-            if(next->value->base.class == CLASS_SYMBOL){
-                QrtSymbol *symbol = asQrtSymbol(next->value);
-                if(next->next && next->next->value){
-                    follows = asQrtCell(next->next)->value;
-                    if(follows->base.class == CLASS_INT){
-                        if(symbol->is_define){
-                            symbol->value = follows;    
-                            ctl_tree_insert(block->namespace, symbol->name, follows);
-                            next->next = next->next->next;
-                        }
-                    }else if(follows->base.class == CLASS_BLOCK){
-                        follows = asQrtBlock(next->next->value);
-                        if(symbol->is_define){
-                            symbol->value = follows;    
-                            ctl_tree_insert(block->namespace, symbol->name, follows);
-                            next->next = next->next->next;
-                        }
-                    }
-                }
-            }
-        }
-        next = next->next;
-    }
-}
-
-CtlAbs *build_statements(QrtBlock *block){
-    /* if/else etc */
-    QrtStatement *stmt =  block->statement_root;
-    while(stmt){
-        build_expressions(block, stmt);
-        stmt = stmt->next;
-    }
-
-}
-
-CtlAbs *pre_proc(QrtCtx *ctx){
-    Crray *stack = ctl_crray_alloc(16);
-    QrtBlock *block = ctx->root;
-    QrtBlock *prev;
-    QrtBlock *current;
-    ctl_crray_push(stack, block);
-    while(block){
-        build_statements(block);
-        if(block->branch){
-            ctl_crray_push(stack, block);
-            block = block->branch;
-            if(block->branch)
-                continue;
-            build_statements(block);
-        }
-        if(block->next == NULL && stack->length > 1){
-            prev = ctl_crray_pop(stack, -1); 
-            block = prev;
-        }
-        block = block->next;
-    } 
 }
 
 
