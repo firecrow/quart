@@ -24,7 +24,7 @@ int main(){
     printf("source\n%s\n---------------\n",v);
 
     QrtCtx *ctx = build(v);
-    CtlAbs *reg = exec(ctx);
+    /*CtlAbs *reg = exec(ctx);*/
     print_blocks(ctx);
     return 0;
 }
