@@ -1,3 +1,13 @@
+CtlAbs *onBlock(QrtMapper *map, QrtBlock *block){
+    print_block(block, map->space, 0);
+}
+CtlAbs *onStmt(QrtMapper *map, QrtStatement *stmt){
+    print_stmt(stmt, map->space);
+}
+CtlAbs *onCell(QrtMapper *map, QrtCell *cell){
+    print_node(cell, map->space);
+}
+
 CtlAbs *exec_expressions(QrtBlock *block, QrtStatement *stmt){
     /* sum up and return a value */
     /* assign symbol values */
@@ -40,29 +50,34 @@ CtlAbs *exec_expressions(QrtBlock *block, QrtStatement *stmt){
     }
 }
 
-CtlAbs *exec_statements(QrtBlock *block){
+CtlAbs *exec_statements(QrtBlock *block, QrtMapper *map){
     QrtStatement *stmt =  block->statement_root;
     while(stmt){
+        map->onStmt(map, stmt);
+        /*
         exec_expressions(block, stmt);
+        */
         stmt = stmt->next;
     }
 }
 
 
-CtlAbs *pre_proc_exec(QrtCtx *ctx){
+CtlAbs *pre_proc_exec(QrtCtx *ctx, QrtMapper *map){
     Crray *stack = ctl_crray_alloc(16);
     QrtBlock *block = ctx->root;
     QrtBlock *prev;
     QrtBlock *current;
     ctl_crray_push(stack, block);
     while(block){
-        exec_statements(block);
+        map->onBlock(map, block);
+        exec_statements(block, map);
         if(block->branch){
             ctl_crray_push(stack, block);
             block = block->branch;
             if(block->branch)
                 continue;
-            exec_statements(block);
+            map->onBlock(map, block);
+            exec_statements(block, map);
         }
         if(block->next == NULL && stack->length > 1){
             prev = ctl_crray_pop(stack, -1); 
@@ -72,18 +87,7 @@ CtlAbs *pre_proc_exec(QrtCtx *ctx){
     } 
 }
 
-CtlAbs *onBlock(QrtMapper *map, QrtBlock *block){
-    print_block(block, map->space, 0);
-}
-CtlAbs *onStmt(QrtMapper *map, QrtStatement *stmt){
-    print_stmt(stmt, map->space);
-}
-CtlAbs *onCell(QrtMapper *map, QrtCell *cell){
-    print_node(cell, map->space);
-}
-
-
 void exec(QrtCtx *ctx){
     QrtMapper *map = qrt_mapper_alloc(ctx, onBlock, onStmt, onCell);
+    pre_proc_exec(ctx, map);
 }
-

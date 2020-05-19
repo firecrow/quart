@@ -25,6 +25,7 @@ int main(){
 
     QrtCtx *ctx = build(v);
     /*CtlAbs *reg = exec(ctx);*/
-    print_blocks(ctx);
+    /*print_blocks(ctx);*/
+    exec(ctx);
     return 0;
 }

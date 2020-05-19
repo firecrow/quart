@@ -175,16 +175,16 @@ QrtBlock *asQrtBlock(CtlAbs *x){
 
 typedef struct qrt_mapper {
     struct base base;
-    CtlAbs *(*onBlock)(QrtBlock *block);
-    CtlAbs *(*onStatement)(QrtStatement *stmt);
-    CtlAbs *(*onCell)(QrtCell *cell);
+    CtlAbs *(*onBlock)(struct qrt_mapper *mapper, QrtBlock *block);
+    CtlAbs *(*onStmt)(struct qrt_mapper *mapper, QrtStatement *stmt);
+    CtlAbs *(*onCell)(struct qrt_mapper *mapper, QrtCell *cell);
     CtlCounted *space;
 }QrtMapper;
 
 
 QrtMapper *qrt_mapper_alloc(QrtCtx *ctx,
             CtlAbs *(*onBlock)(struct qrt_mapper *mapper, QrtBlock *block),
-            CtlAbs *(*onStatement)(struct qrt_mapper *mapper, QrtStatement *stmt),
+            CtlAbs *(*onStmt)(struct qrt_mapper *mapper, QrtStatement *stmt),
             CtlAbs *(*onCell)(struct qrt_mapper *mapper, QrtCell *cell)
         ){
     struct qrt_mapper *mapper;
@@ -192,8 +192,9 @@ QrtMapper *qrt_mapper_alloc(QrtCtx *ctx,
     bzero(mapper, sizeof(struct qrt_mapper));
     mapper->base.class = CLASS_UNDEFINED;
     mapper->onBlock = onBlock;
-    mapper->onStatement = onStatement;
+    mapper->onStmt = onStmt;
     mapper->onCell = onCell;
     mapper->space = ctl_counted_from_cstr("                    ");
     mapper->space->length = 0;
+    return mapper;
 }
