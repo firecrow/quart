@@ -1,40 +1,50 @@
+void consolidate_value(QrtBlock *block, QrtCell *cell, int skip){
+    CtlAbs *follows;
+    if(cell->value && cell->value->base.class == CLASS_SYMBOL){
+        QrtSymbol *symbol = asQrtSymbol(cell->value);
+        if(cell->next && cell->next->value){
+            follows = asQrtCell(cell->next)->value;
+            if(follows->base.class == CLASS_INT){
+                if(symbol->is_define){
+                    symbol->value = follows;
+                    ctl_tree_insert(block->namespace, symbol->name, follows);
+                    if(!skip)
+                        cell->next = cell->next->next;
+                }
+            }else if(follows->base.class == CLASS_BLOCK){
+                follows = asQrtBlock(cell->next->value);
+                if(symbol->is_define){
+                    symbol->value = follows;    
+                    ctl_tree_insert(block->namespace, symbol->name, follows);
+                    if(!skip)
+                        cell->next = cell->next->next;
+                }
+            }
+        }
+    }
+}
+
 CtlAbs *build_expressions(QrtBlock *block, QrtStatement *stmt){
     /* sum up and return a value */
     /* assign symbol values */
     /* operators ! + * */
     QrtCell *next = stmt->cell_root;
-    CtlAbs *follows;
+    QrtCell *before;
     while(block){
         if(block->type == '{')
             break;
          block = block->parent;
     }
     if(next){
+        consolidate_value(block, next, 1);
         stmt->cell_lead = next;
-        next = stmt->cell_root = next->next;
+        before = next->next;
+        next->next = NULL;
+        next = stmt->cell_root = before; 
     }
     while(next){
         if(next->value){
-            if(next->value->base.class == CLASS_SYMBOL){
-                QrtSymbol *symbol = asQrtSymbol(next->value);
-                if(next->next && next->next->value){
-                    follows = asQrtCell(next->next)->value;
-                    if(follows->base.class == CLASS_INT){
-                        if(symbol->is_define){
-                            symbol->value = follows;    
-                            ctl_tree_insert(block->namespace, symbol->name, follows);
-                            next->next = next->next->next;
-                        }
-                    }else if(follows->base.class == CLASS_BLOCK){
-                        follows = asQrtBlock(next->next->value);
-                        if(symbol->is_define){
-                            symbol->value = follows;    
-                            ctl_tree_insert(block->namespace, symbol->name, follows);
-                            next->next = next->next->next;
-                        }
-                    }
-                }
-            }
+            consolidate_value(block, next, 0);
         }
         next = next->next;
     }

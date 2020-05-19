@@ -22,9 +22,9 @@ int main(){
     char *source = ":y 3 :x 2; :z 7\n :j 25 ";
     char *s = "\n:run { write x :z 5 write z} :alpha { 2 + {:j 13 :i 0 {7*1 {write use save out run p}}}}";
     char *z = ":javalin 0, :run { write x, write 2*4*y, &javalin y} :juliet 7 + 2 + 4, run :x 2 :y 3";
-    printf("source\n%s\n---------------\n",v);
+    printf("source\n%s\n---------------\n",s);
 
-    QrtCtx *ctx = build(v);
+    QrtCtx *ctx = build(s);
     /*CtlAbs *reg = exec(ctx);*/
     print_blocks(ctx);
     /*exec(ctx);*/
