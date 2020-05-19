@@ -71,3 +71,19 @@ CtlAbs *pre_proc_exec(QrtCtx *ctx){
         block = block->next;
     } 
 }
+
+CtlAbs *onBlock(QrtMapper *map, QrtBlock *block){
+    print_block(block, map->space, 0);
+}
+CtlAbs *onStmt(QrtMapper *map, QrtStatement *stmt){
+    print_stmt(stmt, map->space);
+}
+CtlAbs *onCell(QrtMapper *map, QrtCell *cell){
+    print_node(cell, map->space);
+}
+
+
+void exec(QrtCtx *ctx){
+    QrtMapper *map = qrt_mapper_alloc(ctx, onBlock, onStmt, onCell);
+}
+

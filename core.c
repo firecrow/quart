@@ -178,13 +178,14 @@ typedef struct qrt_mapper {
     CtlAbs *(*onBlock)(QrtBlock *block);
     CtlAbs *(*onStatement)(QrtStatement *stmt);
     CtlAbs *(*onCell)(QrtCell *cell);
+    CtlCounted *space;
 }QrtMapper;
 
 
 QrtMapper *qrt_mapper_alloc(QrtCtx *ctx,
-            CtlAbs *(*onBlock)(QrtBlock *block),
-            CtlAbs *(*onStatement)(QrtStatement *stmt),
-            CtlAbs *(*onCell)(QrtCell *cell)
+            CtlAbs *(*onBlock)(struct qrt_mapper *mapper, QrtBlock *block),
+            CtlAbs *(*onStatement)(struct qrt_mapper *mapper, QrtStatement *stmt),
+            CtlAbs *(*onCell)(struct qrt_mapper *mapper, QrtCell *cell)
         ){
     struct qrt_mapper *mapper;
     ctl_xptr(mapper = malloc(sizeof(struct qrt_mapper)));
@@ -193,4 +194,6 @@ QrtMapper *qrt_mapper_alloc(QrtCtx *ctx,
     mapper->onBlock = onBlock;
     mapper->onStatement = onStatement;
     mapper->onCell = onCell;
+    mapper->space = ctl_counted_from_cstr("                    ");
+    mapper->space->length = 0;
 }
