@@ -3,13 +3,16 @@ CtlAbs *exec_expressions(QrtBlock *block, QrtStatement *stmt){
     /* assign symbol values */
     /* operators ! + * */
     QrtCell *next = stmt->cell_root;
+    CtlAbs *follows;
     while(block){
         if(block->type == '{')
             break;
          block = block->parent;
     }
-
-    CtlAbs *follows;
+    if(next){
+        stmt->cell_lead = next;
+        next = stmt->cell_root = next->next;
+    }
     while(next){
         if(next->value){
             if(next->value->base.class == CLASS_SYMBOL){

@@ -35,6 +35,7 @@ typedef struct qrt_statement {
     struct qrt_block *parent;
     struct qrt_statement *previous;
     struct qrt_statement *next;
+    QrtCell *cell_lead;
     QrtCell *cell_root;
     QrtCell *cell_next;
 } QrtStatement;
