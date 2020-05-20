@@ -33,9 +33,6 @@ void consolidate_value(QrtBlock *block, QrtCell *cell, int skip){
 }
 
 CtlAbs *build_expressions(QrtBlock *block, QrtStatement *stmt){
-    /* sum up and return a value */
-    /* assign symbol values */
-    /* operators ! + * */
     QrtCell *next = stmt->cell_root;
     while(block){
         if(block->type == '{')
@@ -56,7 +53,6 @@ CtlAbs *build_expressions(QrtBlock *block, QrtStatement *stmt){
 }
 
 CtlAbs *build_statements(QrtBlock *block){
-    /* if/else etc */
     QrtStatement *stmt =  block->statement_root;
     while(stmt){
         build_expressions(block, stmt);
@@ -86,6 +82,21 @@ CtlAbs *pre_proc(QrtCtx *ctx){
         }
         block = block->next;
     } 
+}
+
+QrtBlock *push_block(Crray *stack, QrtBlock *current, QrtBlock *new){
+    new->parent = current;
+    current->branch = new;
+    ctl_crray_push(stack, (CtlAbs *)ctl_block_incr(new));
+    return new;
+}
+
+QrtStatement *push_statement(QrtBlock *block, QrtStatement *stmt){
+    if(block->statement_root == NULL)
+        block->statement_root = block->statement_next = stmt;
+    else
+        block->statement_next->next =  stmt;
+    return stmt;
 }
 
 
