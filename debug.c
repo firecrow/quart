@@ -42,12 +42,13 @@ void print_node(struct qrt_cell *node, CtlCounted *space){
 }
 
 void print_stmt(QrtStatement *stmt, CtlCounted *space){
+    CtlCounted *nospace = ctl_counted_from_cstr("");
     printf("%s; %d",
         ctl_counted_to_cstr(space), stmt->base.id 
     );
     if(stmt->cell_lead){
         printf("\x1b[35m");
-        print_node(stmt->cell_lead, space);
+        print_node(stmt->cell_lead, nospace);
         printf("\x1b[0m");
     }else{
     printf("\n");
