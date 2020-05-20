@@ -17,6 +17,17 @@ QrtBlock *push_block(Crray *stack, QrtBlock *current, QrtBlock *new){
     return new;
 }
 
+QrtBlock *pop_block(Crray *stack, QrtBlock *block, QrtBlock *new){
+    QrtBlock *current, *next_block;
+    ctl_crray_remove(stack,  -1);
+    next_block = ctl_crray_tail(stack);
+    current = next_block;
+    while((next_block = next_block->next)) current = next_block;
+    current->next = new;
+    new->parent = current;
+    return new;
+}
+
 QrtStatement *push_statement(QrtBlock *block, QrtStatement *stmt){
     if(block->statement_root == NULL)
         block->statement_root = block->statement_next = stmt;
@@ -132,49 +143,20 @@ QrtCtx *blocks(QrtCtx *ctx){
                 stmt = push_statement(block, qrt_statement_alloc(block, NULL, cell));
                 continue;
             }else{
-                ctl_crray_remove(stack,  -1);
-                next_block = ctl_crray_tail(stack);
-                current = next_block;
-                while((next_block = next_block->next)) current = next_block;
-                current->next = new;
-                new->parent = current;
-
-                block = new;
-                newstmt = qrt_statement_alloc(block, NULL, cell);
-                if(block->statement_root == NULL){
-                    block->statement_root = block->statement_next = newstmt;
-                }else{
-                    block->statement_next->next =  newstmt;
-                }
-
-                stmt = block->statement_root;
-
-
+                block =  pop_block(stack, current, new);
+                stmt = push_statement(block, qrt_statement_alloc(block, NULL, cell));
                 cell = break_chain_cell(cell);
                 stmt->cell_root = cell;
                 continue;
-
             }
-
         }
         if(is_break_value(cell->value)){
             cell = break_chain_cell(cell);
-            newstmt = qrt_statement_alloc(block, stmt, cell);
-            if(block->statement_root == NULL){
-                block->statement_root = block->statement_next = newstmt;
-            }else{
-                block->statement_next->next = newstmt;
-            }
-            block->statement_next = newstmt;
+            stmt = push_statement(block, qrt_statement_alloc(block, NULL, cell));
             continue;
         }
         cell = cell->next;
     }
-    /*
-    for(int i=0; i< list->length; i++){
-        print_block(list->content[i], ctl_counted_from_cstr("+ "));
-    }
-    */
     return ctx;
 }
 
