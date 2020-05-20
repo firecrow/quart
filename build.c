@@ -10,6 +10,21 @@ QrtCell *break_chain_cell(QrtCell *cell){
     return next;
 }
 
+QrtBlock *push_block(Crray *stack, QrtBlock *current, QrtBlock *new){
+    new->parent = current;
+    current->branch = new;
+    ctl_crray_push(stack, (CtlAbs *)ctl_block_incr(new));
+    return new;
+}
+
+QrtStatement *push_statement(QrtBlock *block, QrtStatement *stmt){
+    if(block->statement_root == NULL)
+        block->statement_root = block->statement_next = stmt;
+    else
+        block->statement_next->next =  stmt;
+    return stmt;
+}
+
 void consolidate_value(QrtBlock *block, QrtCell *cell, int skip){
     if(cell->value && cell->value->base.class == CLASS_SYMBOL){
         QrtSymbol *symbol = asQrtSymbol(cell->value);
@@ -84,20 +99,6 @@ CtlAbs *pre_proc(QrtCtx *ctx){
     } 
 }
 
-QrtBlock *push_block(Crray *stack, QrtBlock *current, QrtBlock *new){
-    new->parent = current;
-    current->branch = new;
-    ctl_crray_push(stack, (CtlAbs *)ctl_block_incr(new));
-    return new;
-}
-
-QrtStatement *push_statement(QrtBlock *block, QrtStatement *stmt){
-    if(block->statement_root == NULL)
-        block->statement_root = block->statement_next = stmt;
-    else
-        block->statement_next->next =  stmt;
-    return stmt;
-}
 
 
 QrtCtx *blocks(QrtCtx *ctx){
@@ -112,40 +113,29 @@ QrtCtx *blocks(QrtCtx *ctx){
     Crray *list = ctl_crray_alloc(16);
     ctl_crray_push(list, block);
     QrtStatement *newstmt;
+    QrtBlock *new;
+    QrtBlock *current;
+    QrtBlock *next_block;
     
     QrtStatement *stmt = qrt_statement_alloc(block, NULL, cell);
     block->statement_root = block->statement_next = stmt;
     while(cell){
-        if(cell->value && cell->value->base.class == CLASS_BLOCK){
-            QrtBlock *new = (QrtBlock *)cell->value; 
-            QrtBlock *current;
-            QrtBlock *next;
+        if(new = asQrtBlock(cell->value)){
             ctl_crray_push(list, new);
 
             CtlCounted *space = ctl_counted_alloc("hello", 5);
             space->length = 0;
             
             if(new->type == '{'){
-                new->parent = block;
-                block->branch = new;
-                ctl_crray_push(stack, ctl_block_incr(new));
-                block = new;
-
+                block = push_block(stack, block, new);
                 cell = break_chain_cell(cell);
-                newstmt = qrt_statement_alloc(block, NULL, cell);
-                if(block->statement_root == NULL){
-                    block->statement_root = block->statement_next = newstmt;
-                }else{
-                    block->statement_next->next =  newstmt;
-                }
-                block->statement_next = newstmt;
-                stmt = newstmt;
+                stmt = push_statement(block, qrt_statement_alloc(block, NULL, cell));
                 continue;
             }else{
                 ctl_crray_remove(stack,  -1);
-                next = ctl_crray_tail(stack);
-                current = next;
-                while((next = next->next)) current = next;
+                next_block = ctl_crray_tail(stack);
+                current = next_block;
+                while((next_block = next_block->next)) current = next_block;
                 current->next = new;
                 new->parent = current;
 
