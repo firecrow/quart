@@ -1,7 +1,7 @@
 CtlAbs *get_following_value(QrtCell *cell){
     if(cell->next && cell->next->value)
-        return asQrtCell(cell->next)->value;
-            
+        return cell->next->value;
+    return NULL;
 }
 QrtCell *break_chain_cell(QrtCell *cell){
    QrtCell *next;
@@ -20,7 +20,7 @@ QrtBlock *push_block(Crray *stack, QrtBlock *current, QrtBlock *new){
 QrtBlock *pop_block(Crray *stack, QrtBlock *block, QrtBlock *new){
     QrtBlock *current, *next_block;
     ctl_crray_remove(stack,  -1);
-    next_block = ctl_crray_tail(stack);
+    next_block = asQrtBlock(ctl_crray_tail(stack));
     current = next_block;
     while((next_block = next_block->next)) current = next_block;
     current->next = new;
@@ -43,13 +43,13 @@ void consolidate_value(QrtBlock *block, QrtCell *cell, int skip){
         if(symbol->value){
             if(asCtlInt(symbol->value)){
                 if(symbol->type != 'x'){
-                    ctl_tree_insert(block->namespace, symbol->name, symbol->value);
+                    ctl_tree_insert(block->namespace, (CtlAbs *)symbol->name, symbol->value);
                     if(!skip)
                         cell->next = cell->next->next;
                 }
             }else if(asQrtBlock(symbol->value)){
                 if(symbol->type != 'x'){
-                    ctl_tree_insert(block->namespace, symbol->name, symbol->value);
+                    ctl_tree_insert(block->namespace, (CtlAbs *)symbol->name, symbol->value);
                     if(!skip)
                         cell->next = cell->next->next;
                 }
@@ -58,7 +58,7 @@ void consolidate_value(QrtBlock *block, QrtCell *cell, int skip){
     }
 }
 
-CtlAbs *build_expressions(QrtBlock *block, QrtStatement *stmt){
+void build_expressions(QrtBlock *block, QrtStatement *stmt){
     QrtCell *next = stmt->cell_root;
     while(block){
         if(block->type == '{')
@@ -78,7 +78,7 @@ CtlAbs *build_expressions(QrtBlock *block, QrtStatement *stmt){
     }
 }
 
-CtlAbs *build_statements(QrtBlock *block){
+void build_statements(QrtBlock *block){
     QrtStatement *stmt =  block->statement_root;
     while(stmt){
         build_expressions(block, stmt);
@@ -87,23 +87,23 @@ CtlAbs *build_statements(QrtBlock *block){
 
 }
 
-CtlAbs *pre_proc(QrtCtx *ctx){
+void pre_proc(QrtCtx *ctx){
     Crray *stack = ctl_crray_alloc(16);
     QrtBlock *block = ctx->root;
     QrtBlock *prev;
     QrtBlock *current;
-    ctl_crray_push(stack, block);
+    ctl_crray_push(stack, (CtlAbs *)block);
     while(block){
         build_statements(block);
         if(block->branch){
-            ctl_crray_push(stack, block);
+            ctl_crray_push(stack, (CtlAbs *)block);
             block = block->branch;
             if(block->branch)
                 continue;
             build_statements(block);
         }
         if(block->next == NULL && stack->length > 1){
-            prev = ctl_crray_pop(stack, -1); 
+            prev = asQrtBlock(ctl_crray_pop(stack, -1)); 
             block = prev;
         }
         block = block->next;
@@ -120,9 +120,9 @@ QrtCtx *blocks(QrtCtx *ctx){
     QrtCell *cell = start;
     QrtCell *next = cell;
     Crray *stack = ctl_crray_alloc(16);
-    ctl_crray_push(stack, block);
+    ctl_crray_push(stack, (CtlAbs *)block);
     Crray *list = ctl_crray_alloc(16);
-    ctl_crray_push(list, block);
+    ctl_crray_push(list, (CtlAbs *)block);
     QrtStatement *newstmt;
     QrtBlock *new;
     QrtBlock *current;
@@ -131,8 +131,8 @@ QrtCtx *blocks(QrtCtx *ctx){
     QrtStatement *stmt = qrt_statement_alloc(block, NULL, cell);
     block->statement_root = block->statement_next = stmt;
     while(cell){
-        if(new = asQrtBlock(cell->value)){
-            ctl_crray_push(list, new);
+        if((new = asQrtBlock(cell->value))){
+            ctl_crray_push(list, (CtlAbs *)new);
 
             if(new->type == '{'){
                 block = push_block(stack, block, new);
@@ -147,7 +147,7 @@ QrtCtx *blocks(QrtCtx *ctx){
                 continue;
             }
         }
-        if(is_break_value(cell->value)){
+        if((is_break_value(cell->value))){
             cell = break_chain_cell(cell);
             stmt = push_statement(block, qrt_statement_alloc(block, NULL, cell));
             continue;

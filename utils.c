@@ -63,17 +63,19 @@ int is_variable_value(CtlAbs *value){
         case CLASS_COUNTED:
         /*case CLASS_BLOCK:*/
             return 1;
+        default:
+            return 0;
     }
-    return 0;
 }
 
-is_break_value(CtlAbs *value){
+int is_break_value(CtlAbs *value){
     if(!value)
         return 0;
     switch(value->base.class){
         case CLASS_SEP:
             return 1;
+        default:
+            return 0;
     }
-    return 0;
 }
 

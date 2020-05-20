@@ -1,14 +1,14 @@
-CtlAbs *onBlock(QrtMapper *map, QrtBlock *block){
+void onBlock(QrtMapper *map, QrtBlock *block){
     print_block(block, map->space, 0);
 }
-CtlAbs *onStmt(QrtMapper *map, QrtStatement *stmt){
+void onStmt(QrtMapper *map, QrtStatement *stmt){
     print_stmt(stmt, map->space);
 }
-CtlAbs *onCell(QrtMapper *map, QrtCell *cell){
+void onCell(QrtMapper *map, QrtCell *cell){
     print_node(cell, map->space);
 }
 
-CtlAbs *exec_expressions(QrtBlock *block, QrtStatement *stmt, QrtMapper *map){
+void exec_expressions(QrtBlock *block, QrtStatement *stmt, QrtMapper *map){
     QrtCell *next = stmt->cell_root;
     while(next){
         map->onCell(map, next);
@@ -16,7 +16,7 @@ CtlAbs *exec_expressions(QrtBlock *block, QrtStatement *stmt, QrtMapper *map){
     }
 }
 
-CtlAbs *exec_statements(QrtBlock *block, QrtMapper *map){
+void exec_statements(QrtBlock *block, QrtMapper *map){
     QrtStatement *stmt =  block->statement_root;
     while(stmt){
         map->onStmt(map, stmt);
@@ -26,18 +26,18 @@ CtlAbs *exec_statements(QrtBlock *block, QrtMapper *map){
 }
 
 
-CtlAbs *mapper(QrtCtx *ctx, QrtMapper *map){
+void mapper(QrtCtx *ctx, QrtMapper *map){
     Crray *stack = ctl_crray_alloc(16);
     QrtBlock *block = ctx->root;
     QrtBlock *prev;
     QrtBlock *current;
-    ctl_crray_push(stack, block);
+    ctl_crray_push(stack, (CtlAbs *)block);
     while(block){
         map->onBlock(map, block);
         exec_statements(block, map);
         if(block->branch){
             map->space->length += 4;
-            ctl_crray_push(stack, block);
+            ctl_crray_push(stack, (CtlAbs *)block);
             block = block->branch;
             if(block->branch)
                 continue;
@@ -46,7 +46,7 @@ CtlAbs *mapper(QrtCtx *ctx, QrtMapper *map){
         }
         if(block->next == NULL && stack->length > 1){
             map->space->length -= 4;
-            prev = ctl_crray_pop(stack, -1); 
+            prev = asQrtBlock(ctl_crray_pop(stack, -1)); 
             block = prev;
         }
         block = block->next;

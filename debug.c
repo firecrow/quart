@@ -83,7 +83,7 @@ void print_block(QrtBlock *block, CtlCounted *space, int statements){
     if(iter->size(iter)){
         CtlTreeNode *node = NULL;
         while((node = iter->next(iter)) != NULL){
-            printf("\x1b[33m(%s):%s\x1b[0m\n", ctl_counted_to_cstr(node->key), get_class_str((CtlAbs *)node->data));
+            printf("\x1b[33m(%s):%s\x1b[0m\n", ctl_counted_to_cstr((CtlCounted *)node->key), get_class_str((CtlAbs *)node->data));
         }
     }
 
@@ -140,12 +140,12 @@ void print_blocks(QrtCtx *ctx){
     QrtBlock *block = ctx->root;
     QrtBlock *prev;
     QrtBlock *current;
-    ctl_crray_push(stack, block);
+    ctl_crray_push(stack, (CtlAbs *)block);
     while(block){
         print_block(block, space, 1);
         if(block->branch){
             space->length += 4;
-            ctl_crray_push(stack, block);
+            ctl_crray_push(stack, (CtlAbs *)block);
             block = block->branch;
             if(block->branch)
                 continue;
@@ -153,7 +153,7 @@ void print_blocks(QrtCtx *ctx){
         }
         if(block->next == NULL && stack->length > 1){
             space->length -= 4;
-            prev = ctl_crray_pop(stack, -1); 
+            prev = asQrtBlock(ctl_crray_pop(stack, -1));
             block = prev;
         }
         block = block->next;

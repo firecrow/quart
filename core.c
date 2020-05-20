@@ -180,17 +180,17 @@ QrtBlock *asQrtBlock(CtlAbs *x){
 
 typedef struct qrt_mapper {
     struct base base;
-    CtlAbs *(*onBlock)(struct qrt_mapper *mapper, QrtBlock *block);
-    CtlAbs *(*onStmt)(struct qrt_mapper *mapper, QrtStatement *stmt);
-    CtlAbs *(*onCell)(struct qrt_mapper *mapper, QrtCell *cell);
+    void (*onBlock)(struct qrt_mapper *mapper, QrtBlock *block);
+    void (*onStmt)(struct qrt_mapper *mapper, QrtStatement *stmt);
+    void (*onCell)(struct qrt_mapper *mapper, QrtCell *cell);
     CtlCounted *space;
 }QrtMapper;
 
 
 QrtMapper *qrt_mapper_alloc(QrtCtx *ctx,
-            CtlAbs *(*onBlock)(struct qrt_mapper *mapper, QrtBlock *block),
-            CtlAbs *(*onStmt)(struct qrt_mapper *mapper, QrtStatement *stmt),
-            CtlAbs *(*onCell)(struct qrt_mapper *mapper, QrtCell *cell)
+            void (*onBlock)(struct qrt_mapper *mapper, QrtBlock *block),
+            void (*onStmt)(struct qrt_mapper *mapper, QrtStatement *stmt),
+            void (*onCell)(struct qrt_mapper *mapper, QrtCell *cell)
         ){
     struct qrt_mapper *mapper;
     ctl_xptr(mapper = malloc(sizeof(struct qrt_mapper)));
