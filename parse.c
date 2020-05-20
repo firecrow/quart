@@ -11,8 +11,8 @@ enum classes identify_token(CtlCounted *token){
             if(is_alpha(c)){
                 class = CLASS_SYMBOL;
             }
-            if(c == ':'){
-                class = CLASS_DEFINE;
+            if(c == ':' || c == '.' || c == '&'){
+                class = CLASS_SYMBOL;
                 continue;
             }
             if(c == '"'){
@@ -36,7 +36,7 @@ enum classes identify_token(CtlCounted *token){
                 return CLASS_INVALID;
             }
         }
-        if(class == CLASS_SYMBOL || class == CLASS_DEFINE){
+        if(class == CLASS_SYMBOL){
             if(!is_alpha_numeric(c)){
                 return CLASS_INVALID;
             }
@@ -64,9 +64,8 @@ QrtCell *make_token(struct qrt_ctx *ctx, CtlCounted *name, QrtCell *current){
         node->value = (CtlAbs *)qrt_sep_alloc();
     }else if(token_type == CLASS_COUNTED){
         node->value = (CtlAbs *)name;
-    }else if(token_type == CLASS_SYMBOL || token_type == CLASS_DEFINE){
-        QrtSymbol *symbol = qrt_symbol_alloc(node, token_type == CLASS_DEFINE); 
-        symbol->name = name;
+    }else if(token_type == CLASS_SYMBOL){
+        QrtSymbol *symbol = qrt_symbol_alloc(node, name); 
         node->value = (CtlAbs *)symbol; 
     }
 

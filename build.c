@@ -42,13 +42,13 @@ void consolidate_value(QrtBlock *block, QrtCell *cell, int skip){
         symbol->value = get_following_value(cell);
         if(symbol->value){
             if(asCtlInt(symbol->value)){
-                if(symbol->is_define){
+                if(symbol->type == ':'){
                     ctl_tree_insert(block->namespace, symbol->name, symbol->value);
                     if(!skip)
                         cell->next = cell->next->next;
                 }
             }else if(asQrtBlock(symbol->value)){
-                if(symbol->is_define){
+                if(symbol->type == ':'){
                     ctl_tree_insert(block->namespace, symbol->name, symbol->value);
                     if(!skip)
                         cell->next = cell->next->next;

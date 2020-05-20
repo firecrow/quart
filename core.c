@@ -59,7 +59,7 @@ typedef struct qrt_symbol {
    QrtCell *parent;
    CtlCounted *name;
    CtlAbs *value;
-   int is_define;
+   char type;
 } QrtSymbol;
 
 typedef struct qrt_sep {
@@ -86,14 +86,15 @@ QrtOpp *qrt_opp_alloc(char type){
 }
 
 int qrt_symbol_id=0;
-QrtSymbol *qrt_symbol_alloc(QrtCell *parent, int is_define){
+QrtSymbol *qrt_symbol_alloc(QrtCell *parent, CtlCounted *name){
     QrtSymbol *symbol;
     ctl_xptr(symbol = malloc(sizeof(QrtSymbol)));
     bzero(symbol, sizeof(QrtSymbol));
     symbol->base.class = CLASS_SYMBOL;
     symbol->base.id = ++qrt_symbol_id;
-    symbol->is_define = is_define;
     symbol->parent = parent;
+    symbol->name = name;
+    symbol->type = name->data[0];
     return symbol;
 }
 
@@ -153,7 +154,7 @@ QrtBlock *ctl_block_decr(QrtBlock *block){
 }
 
 QrtSymbol *asQrtSymbol(CtlAbs *x){
-    if(x && x->base.class != CLASS_SYMBOL && x->base.class != CLASS_DEFINE){
+    if(x && x->base.class != CLASS_SYMBOL){
         return NULL;
     }
     return (QrtSymbol *)x; 

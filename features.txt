@@ -1,12 +1,28 @@
 x parse into blocks->statements->cells by type
+x refactor parsing and data types
 
-> statements  head->tail...
-   > predicence tree
-        ()!<>*/%+- or and
+- executing statements
+    * 2 4 //8 
+    * 2 4, + 3 //11
+    :x 4 //x->4
+    :y 5 //y->5
+    * x 3, / y
+    :yodle { write x; x + 2 }//func yodle
+    yodle :x 5//writes 5 then returns 10
+
+    :a 10
+    :min { 
+        if { y < a } 
+            {y} 
+        else 
+            {a}}
+
+    min :y 7 // 7
+    min :y 12 // 10
+
 control  whileif elif else
 calling blocks
 
-- refactor parsing and data types
 
 types:
     int

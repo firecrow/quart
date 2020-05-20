@@ -46,7 +46,9 @@ char *get_class_str(CtlAbs *value){
         return "STATEMENT";
     }else if(class == CLASS_SYMBOL){
         QrtSymbol *symbol = (QrtSymbol *)value;
-        if(symbol->is_define) return "DEFINITION";
+        if(symbol->type == ':') return "DEFINITION";
+        else if(symbol->type == '.') return "LOCAL_DEFINITION";
+        else if(symbol->type == '&') return "REASSIGN";
         else return "SYMBOL";
         return "POO";
     }else if(class == CLASS_CELL){
