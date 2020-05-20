@@ -84,7 +84,7 @@ struct qrt_ctx *parse(char *source){
     if(p == '\0') 
         return NULL;
     do {
-        if(*p == ':'){
+        if(*p == ':' || *p == '.' || *p == '&'){
             ctl_counted_push(ctx->shelf, p, 1);
         }else{
             if((ctx->shelf->length == 0 && is_alpha(*p)) || is_alpha_numeric(*p)){
