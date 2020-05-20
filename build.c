@@ -42,13 +42,13 @@ void consolidate_value(QrtBlock *block, QrtCell *cell, int skip){
         symbol->value = get_following_value(cell);
         if(symbol->value){
             if(asCtlInt(symbol->value)){
-                if(symbol->type == ':'){
+                if(symbol->type != 'x'){
                     ctl_tree_insert(block->namespace, symbol->name, symbol->value);
                     if(!skip)
                         cell->next = cell->next->next;
                 }
             }else if(asQrtBlock(symbol->value)){
-                if(symbol->type == ':'){
+                if(symbol->type != 'x'){
                     ctl_tree_insert(block->namespace, symbol->name, symbol->value);
                     if(!skip)
                         cell->next = cell->next->next;
@@ -134,9 +134,6 @@ QrtCtx *blocks(QrtCtx *ctx){
         if(new = asQrtBlock(cell->value)){
             ctl_crray_push(list, new);
 
-            CtlCounted *space = ctl_counted_alloc("hello", 5);
-            space->length = 0;
-            
             if(new->type == '{'){
                 block = push_block(stack, block, new);
                 cell = break_chain_cell(cell);

@@ -29,7 +29,7 @@ int is_alpha_numeric(char c){
 char *get_class_str(CtlAbs *value){
     int class = value->base.class;
     if(class == CLASS_INT){
-        return "INT";
+        return ctl_counted_to_cstr(ctl_counted_format("INT(%d)", asCtlInt(value)->value));
     }else if(class == CLASS_BLOCK){
         QrtBlock *block = (QrtBlock *)value;
         if(block->type == '{') return "BLOCK_OPEN";

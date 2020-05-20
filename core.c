@@ -94,7 +94,11 @@ QrtSymbol *qrt_symbol_alloc(QrtCell *parent, CtlCounted *name){
     symbol->base.id = ++qrt_symbol_id;
     symbol->parent = parent;
     symbol->name = name;
-    symbol->type = name->data[0];
+    char c =  name->data[0];
+    if(c != ':' && c != '.' && c != '&'){
+        c = 'x';
+    }
+    symbol->type = c;
     return symbol;
 }
 
