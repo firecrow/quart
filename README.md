@@ -28,3 +28,5 @@ min :z 17
 &x 5 
 &y 10
 ```
+
+visit [https//:quart.firecrow.com](https://quart.firecrow.com) for detaill.
