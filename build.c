@@ -4,7 +4,8 @@ CtlAbs *get_following_value(QrtCell *cell){
     return NULL;
 }
 QrtCell *break_chain_cell(QrtCell *cell){
-   QrtCell *next;
+    print_node(cell, ctl_cstr(">>>"));
+    QrtCell *next;
     next = cell->next;
     cell->next = NULL;
     return next;
@@ -29,26 +30,29 @@ QrtBlock *pop_block(Crray *stack, QrtBlock *block, QrtBlock *new){
 }
 
 QrtStatement *push_statement(QrtBlock *block, QrtStatement *stmt){
-    if(block->statement_root == NULL)
+    QrtStatement *current, *next;
+    if(block->statement_root == NULL){
         block->statement_root = block->statement_next = stmt;
-    else
-        block->statement_next->next =  stmt;
+    }else{
+        current = next = block->statement_next;
+        while((next = next->next)) current = next;
+        current->next =  stmt;
+    }
     return stmt;
 }
 
 void consolidate_value(QrtBlock *block, QrtCell *cell, int skip){
     if(cell->value && cell->value->base.class == CLASS_SYMBOL){
         QrtSymbol *symbol = asQrtSymbol(cell->value);
-        symbol->value = get_following_value(cell);
-        if(symbol->value){
-            if(asCtlInt(symbol->value)){
-                if(symbol->type != 'x'){
+        if(symbol->type != 'x'){
+            symbol->value = get_following_value(cell);
+            printf("cons: %s %d\n", ctl_counted_to_cstr(symbol->name), skip);
+            if(symbol->value){
+                if(asCtlInt(symbol->value)){
                     ctl_tree_insert(block->namespace, (CtlAbs *)symbol->name, symbol->value);
                     if(!skip)
                         cell->next = cell->next->next;
-                }
-            }else if(asQrtBlock(symbol->value)){
-                if(symbol->type != 'x'){
+                }else if(asQrtBlock(symbol->value)){
                     ctl_tree_insert(block->namespace, (CtlAbs *)symbol->name, symbol->value);
                     if(!skip)
                         cell->next = cell->next->next;
@@ -129,6 +133,7 @@ QrtCtx *blocks(QrtCtx *ctx){
     QrtStatement *stmt = qrt_statement_alloc(block, NULL, cell);
     block->statement_root = block->statement_next = stmt;
     while(cell){
+        print_node(cell, ctl_counted_from_cstr("..."));
         if((new = asQrtBlock(cell->value))){
             ctl_crray_push(list, (CtlAbs *)new);
 
@@ -139,9 +144,8 @@ QrtCtx *blocks(QrtCtx *ctx){
                 continue;
             }else{
                 block =  pop_block(stack, current, new);
-                stmt = push_statement(block, qrt_statement_alloc(block, NULL, cell));
                 cell = break_chain_cell(cell);
-                stmt->cell_root = cell;
+                stmt = push_statement(block, qrt_statement_alloc(block, NULL, cell));
                 continue;
             }
         }
