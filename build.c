@@ -110,8 +110,6 @@ void pre_proc(QrtCtx *ctx){
     } 
 }
 
-
-
 QrtCtx *blocks(QrtCtx *ctx){
     QrtBlock *block = ctx->root;
     QrtBlock *newblock;

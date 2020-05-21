@@ -52,6 +52,7 @@ enum classes identify_token(CtlCounted *token){
 }
 
 QrtCell *make_token(struct qrt_ctx *ctx, CtlCounted *name, QrtCell *current){
+    printf("regular called\n");
     struct qrt_cell *node = qrt_cell_alloc();
     enum classes token_type = identify_token(name);
     if(token_type == CLASS_OPP){
@@ -73,6 +74,11 @@ QrtCell *make_token(struct qrt_ctx *ctx, CtlCounted *name, QrtCell *current){
     node->previous = current;
     return node;
 }
+
+#ifdef TEST
+    #define make_token make_token_mock
+#endif
+
 
 struct qrt_ctx *parse(char *source){
     char *p = source;
@@ -97,7 +103,6 @@ struct qrt_ctx *parse(char *source){
                 cell = make_token(ctx, ctl_counted_alloc(p, 1), cell);
             }
         }
-    }while(*++p != '\0');
+    }while(*p++ != '\0');
     return ctx;
 }
-
