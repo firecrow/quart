@@ -29,4 +29,4 @@ min :z 17
 &y 10
 ```
 
-visit [https//:quart.firecrow.com](https://quart.firecrow.com) for detaill.
+visit [http://quart.firecrow.com](http://quart.firecrow.com) for detaill.
