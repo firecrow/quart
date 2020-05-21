@@ -13,8 +13,8 @@ Quart is a block based programming language, with few symbols and explict refere
     write j
 }
 
-out :h 10
-ln
+out :h 10 :j "there"
+
 :min {
     .x 10 
     :z 0 
