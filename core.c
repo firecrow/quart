@@ -1,4 +1,4 @@
-
+/* Copyright 2020 Firecrow Silvernight (fire@firecrow.com) licensed under the MIT License see LICENSE file */
 enum qrt_opp_types {
     QRT_PLUS = '+',
     QRT_MINUS = '-',

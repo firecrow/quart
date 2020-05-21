@@ -1,4 +1,4 @@
-
+/* Copyright 2020 Firecrow Silvernight (fire@firecrow.com) licensed under the MIT License see LICENSE file */
 void qrt_out(void *_n){
     struct node *n = (struct node *)_n;
     CtlCounted *key = (CtlCounted *)n->key;

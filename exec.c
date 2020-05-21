@@ -1,3 +1,4 @@
+/* Copyright 2020 Firecrow Silvernight (fire@firecrow.com) licensed under the MIT License see LICENSE file */
 void onBlock(QrtMapper *map, QrtBlock *block){
     print_block(block, map->space, 0);
 }
