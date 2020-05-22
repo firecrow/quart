@@ -1,4 +1,7 @@
 /* Copyright 2020 Firecrow Silvernight (fire@firecrow.com) licensed under the MIT License see LICENSE file */
+
+
+
 enum qrt_opp_types {
     QRT_PLUS = '+',
     QRT_MINUS = '-',
@@ -16,6 +19,7 @@ typedef struct qrt_cell {
     struct qrt_cell *next;
     struct qrt_cell *previous;
 } QrtCell;
+
 
 struct qrt_statement;
 typedef struct qrt_block {
@@ -48,10 +52,13 @@ typedef struct qrt_ctx {
     QrtCell *start; 
 } QrtCtx;
 
+/* may change to _func*/
+struct qrt_opp;
+typedef CtlAbs *(*call)(struct qrt_opp *opp, QrtCell *args);
 typedef struct qrt_opp {
     struct base base;
     char opp_type;
-    struct qrt_cell *(*call)(struct qrt_opp *opp, CtlAbs *a, CtlAbs *b);
+    call call;
 } QrtOpp;
 
 typedef struct qrt_symbol {
@@ -145,7 +152,6 @@ struct qrt_ctx * qrt_ctx_alloc(){
     ctx->base.class = CLASS_CTX;
     ctx->base.id = ++qrt_ctx_id;
     ctx->root = qrt_block_alloc('{', NULL);
-    ctx->start = qrt_cell_alloc(); 
     return ctx;
 }
 
@@ -176,6 +182,13 @@ QrtBlock *asQrtBlock(CtlAbs *x){
         return NULL;
     }
     return (QrtBlock *)x; 
+}
+
+QrtOpp *asQrtOpp(CtlAbs *x){
+    if(x && x->base.class != CLASS_OPP){
+        return NULL;
+    }
+    return (QrtOpp *)x; 
 }
 
 typedef struct qrt_mapper {

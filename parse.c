@@ -53,11 +53,21 @@ enum classes identify_token(CtlCounted *token){
 }
 
 QrtCell *make_token(struct qrt_ctx *ctx, CtlCounted *name, QrtCell *current){
+    printf("name:%s\n", ctl_to_cstr(name));
     struct qrt_cell *node = qrt_cell_alloc();
     enum classes token_type = identify_token(name);
-    printf("token:%s %d\n", ctl_counted_to_cstr(name), token_type);
     if(token_type == CLASS_OPP){
-        node->value = (CtlAbs *)qrt_opp_alloc(name->data[0]); 
+        QrtOpp *opp = qrt_opp_alloc(name->data[0]);
+        switch(opp->opp_type){
+            case '*':
+            case '+':
+            case '-':
+                opp->call = math_call;
+                break;
+            default: 
+                break;
+        }
+        node->value = (CtlAbs *)opp;
     }else if(token_type == CLASS_BLOCK){
         node->value = (CtlAbs *)qrt_block_alloc(name->data[0], NULL); 
     }else if(token_type == CLASS_INT){
@@ -71,8 +81,12 @@ QrtCell *make_token(struct qrt_ctx *ctx, CtlCounted *name, QrtCell *current){
         node->value = (CtlAbs *)symbol; 
     }
 
-    current->next = node;
-    node->previous = current;
+    if(!ctx->start){
+        ctx->start = node;
+    }else{
+        current->next = node;
+        node->previous = current;
+    }
     return node;
 }
 
@@ -85,8 +99,7 @@ struct qrt_ctx *parse(char *source){
     char *p = source;
     struct qrt_ctx *ctx = qrt_ctx_alloc();
     ctx->shelf = ctl_counted_alloc(NULL, 0);
-    struct qrt_cell *cell = qrt_cell_alloc();
-    ctx->start = cell;
+    struct qrt_cell *cell;
 
     if(p == '\0') 
         return NULL;

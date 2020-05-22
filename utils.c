@@ -79,3 +79,6 @@ int is_break_value(CtlAbs *value){
     }
 }
 
+#define QrtError(XARG) \
+    if(XARG)\
+        printf("RuntimeError %s:%d:%s %s\n", __FILE__, __LINE__, __func__, XARG); \

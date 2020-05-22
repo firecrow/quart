@@ -4,7 +4,6 @@ CtlAbs *get_following_value(QrtCell *cell){
     return NULL;
 }
 QrtCell *break_chain_cell(QrtCell *cell){
-    print_node(cell, ctl_cstr(">>>"));
     QrtCell *next;
     next = cell->next;
     cell->next = NULL;
@@ -46,7 +45,6 @@ void consolidate_value(QrtBlock *block, QrtCell *cell, int skip){
         QrtSymbol *symbol = asQrtSymbol(cell->value);
         if(symbol->type != 'x'){
             symbol->value = get_following_value(cell);
-            printf("cons: %s %d\n", ctl_counted_to_cstr(symbol->name), skip);
             if(symbol->value){
                 if(asCtlInt(symbol->value)){
                     ctl_tree_insert(block->namespace, (CtlAbs *)symbol->name, symbol->value);
@@ -68,11 +66,6 @@ void build_expressions(QrtBlock *block, QrtStatement *stmt){
         if(block->type == '{')
             break;
          block = block->parent;
-    }
-    if(next){
-        consolidate_value(block, next, 1);
-        stmt->cell_lead = next;
-        next = stmt->cell_root = break_chain_cell(next);
     }
     while(next){
         if(next->value){
@@ -133,7 +126,6 @@ QrtCtx *blocks(QrtCtx *ctx){
     QrtStatement *stmt = qrt_statement_alloc(block, NULL, cell);
     block->statement_root = block->statement_next = stmt;
     while(cell){
-        print_node(cell, ctl_counted_from_cstr("..."));
         if((new = asQrtBlock(cell->value))){
             ctl_crray_push(list, (CtlAbs *)new);
 

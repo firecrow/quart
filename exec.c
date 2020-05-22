@@ -3,6 +3,16 @@ void onBlock(QrtMapper *map, QrtBlock *block){
     print_block(block, map->space, 0);
 }
 void onStmt(QrtMapper *map, QrtStatement *stmt){
+    printf("\x1b[33m--------------------------------------------\x1b[0m\n");
+    QrtCell *cell = stmt->cell_root;
+    print_node(cell, map->space);
+    QrtOpp *opp;
+    if((opp = asQrtOpp(cell->value))){
+        stmt->reg = opp->call(opp, cell->next);
+        printf("calling\n");
+    }else{
+        printf("not calling\n");
+    }
     print_stmt(stmt, map->space);
 }
 void onCell(QrtMapper *map, QrtCell *cell){
@@ -12,7 +22,8 @@ void onCell(QrtMapper *map, QrtCell *cell){
 void exec_expressions(QrtBlock *block, QrtStatement *stmt, QrtMapper *map){
     QrtCell *next = stmt->cell_root;
     while(next){
-        map->onCell(map, next);
+        if(map->onCell)
+            map->onCell(map, next);
         next = next->next;
     }
 }
@@ -20,7 +31,8 @@ void exec_expressions(QrtBlock *block, QrtStatement *stmt, QrtMapper *map){
 void exec_statements(QrtBlock *block, QrtMapper *map){
     QrtStatement *stmt =  block->statement_root;
     while(stmt){
-        map->onStmt(map, stmt);
+        if(map->onStmt)
+            map->onStmt(map, stmt);
         exec_expressions(block, stmt, map);
         stmt = stmt->next;
     }
@@ -34,7 +46,8 @@ void mapper(QrtCtx *ctx, QrtMapper *map){
     QrtBlock *current;
     ctl_crray_push(stack, (CtlAbs *)block);
     while(block){
-        map->onBlock(map, block);
+        if(map->onBlock)
+            map->onBlock(map, block);
         exec_statements(block, map);
         if(block->branch){
             map->space->length += 4;
@@ -42,7 +55,8 @@ void mapper(QrtCtx *ctx, QrtMapper *map){
             block = block->branch;
             if(block->branch)
                 continue;
-            map->onBlock(map, block);
+            if(map->onBlock)
+                map->onBlock(map, block);
             exec_statements(block, map);
         }
         if(block->next == NULL && stack->length > 1){
@@ -54,7 +68,3 @@ void mapper(QrtCtx *ctx, QrtMapper *map){
     } 
 }
 
-void mapper_example(QrtCtx *ctx){
-    QrtMapper *map = qrt_mapper_alloc(ctx, onBlock, onStmt, onCell);
-    mapper(ctx, map);
-}

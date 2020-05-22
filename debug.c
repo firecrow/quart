@@ -6,6 +6,30 @@ void qrt_out(void *_n){
     else printf("%s -> %s", ctl_counted_to_cstr(key), get_class_str(n->data));
 }
 
+char *get_node_value_str(CtlAbs *value, CtlCounted *space){
+    char *node_value = "";
+    if(value->base.class == CLASS_BLOCK){
+        node_value = ctl_counted_to_cstr(ctl_counted_format("%c", ((QrtBlock *)value)->type));
+    }else if(value->base.class == CLASS_OPP){
+        node_value = ctl_counted_to_cstr(ctl_counted_format("%c", ((QrtOpp *)value)->opp_type));
+    }else if(value->base.class == CLASS_INT){
+        node_value = ctl_counted_to_cstr(ctl_counted_format("%d", asCtlInt(value)->value));
+    }else if(value->base.class == CLASS_SYMBOL){
+        QrtSymbol *symbol = (QrtSymbol *)value;
+        node_value = ctl_counted_to_cstr(symbol->name);
+        if(symbol->value){
+            CtlAbs *value = symbol->value;
+            if(value->base.class == CLASS_INT){
+                node_value = ctl_counted_to_cstr(ctl_counted_format("%s %d", node_value, asCtlInt(value)->value));
+            }
+            if(value->base.class == CLASS_BLOCK){
+                node_value = ctl_counted_to_cstr(ctl_counted_format("%s %c", node_value, asQrtBlock(value)->type));
+            }
+        }
+    }
+    return node_value;
+}
+
 void print_node(struct qrt_cell *node, CtlCounted *space){
     if(space == NULL) space = ctl_counted_from_cstr("");
     char *node_value = "";
@@ -14,25 +38,7 @@ void print_node(struct qrt_cell *node, CtlCounted *space){
     int class = node->base.class;
     struct qrt_cell *cell = node;
     if(node->value){
-        if(node->value->base.class == CLASS_BLOCK){
-            node_value = ctl_counted_to_cstr(ctl_counted_format("%c", ((QrtBlock *)node->value)->type));
-        }else if(node->value->base.class == CLASS_OPP){
-            node_value = ctl_counted_to_cstr(ctl_counted_format("%c", ((QrtOpp *)node->value)->opp_type));
-        }else if(node->value->base.class == CLASS_INT){
-            node_value = ctl_counted_to_cstr(ctl_counted_format("%d", asCtlInt(node->value)->value));
-        }else if(node->value->base.class == CLASS_SYMBOL){
-            QrtSymbol *symbol = (QrtSymbol *)node->value;
-            node_value = ctl_counted_to_cstr(symbol->name);
-            if(symbol->value){
-                CtlAbs *value = symbol->value;
-                if(value->base.class == CLASS_INT){
-                    node_value = ctl_counted_to_cstr(ctl_counted_format("%s %d", node_value, asCtlInt(value)->value));
-                }
-                if(value->base.class == CLASS_BLOCK){
-                    node_value = ctl_counted_to_cstr(ctl_counted_format("%s %c", node_value, asQrtBlock(value)->type));
-                }
-            }
-        }
+        node_value = get_node_value_str(node->value, space);
         class = node->value->base.class;
         cell = (struct qrt_cell *)node->value;
     }
@@ -46,14 +52,11 @@ void print_stmt(QrtStatement *stmt, CtlCounted *space){
     printf("%s; %d",
         ctl_counted_to_cstr(space), stmt->base.id 
     );
-    if(stmt->cell_lead){
-        printf("\x1b[35m");
-        print_node(stmt->cell_lead, nospace);
-        printf("\x1b[0m");
+    if(stmt->reg){
+        printf("reg:%s\n", get_node_value_str(stmt->reg, space));
     }else{
-    printf("\n");
+        printf("no reg\n");
     }
-
 }
 
 void print_statements(QrtBlock *block, CtlCounted *space){
