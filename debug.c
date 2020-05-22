@@ -49,13 +49,11 @@ void print_node(struct qrt_cell *node, CtlCounted *space){
 
 void print_stmt(QrtStatement *stmt, CtlCounted *space){
     CtlCounted *nospace = ctl_counted_from_cstr("");
-    printf("%s; %d",
+    printf("%s;%d ",
         ctl_counted_to_cstr(space), stmt->base.id 
     );
     if(stmt->reg){
-        printf("reg:%s\n", get_node_value_str(stmt->reg, space));
-    }else{
-        printf("no reg\n");
+        printf("reg(\x1b[36m%s\x1b[0m)\n", get_node_value_str(stmt->reg, space));
     }
 }
 

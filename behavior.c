@@ -1,9 +1,9 @@
 CtlAbs *math_call(QrtOpp *opp, QrtCell * args){
-    printf("jsmkdjfksjdkfj\n");
      
     char type = opp->opp_type;
 
-    CtlInt *value = ctl_int_alloc(type == '*' ? 1 : 0);
+    CtlInt *value = ctl_int_alloc(asCtlInt(args->value)->value);
+    args = args->next;
     while(args){
         if(!args->value)
             QrtError("value missing from call");

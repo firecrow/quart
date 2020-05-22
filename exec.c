@@ -3,15 +3,11 @@ void onBlock(QrtMapper *map, QrtBlock *block){
     print_block(block, map->space, 0);
 }
 void onStmt(QrtMapper *map, QrtStatement *stmt){
-    printf("\x1b[33m--------------------------------------------\x1b[0m\n");
     QrtCell *cell = stmt->cell_root;
     print_node(cell, map->space);
     QrtOpp *opp;
     if((opp = asQrtOpp(cell->value))){
         stmt->reg = opp->call(opp, cell->next);
-        printf("calling\n");
-    }else{
-        printf("not calling\n");
     }
     print_stmt(stmt, map->space);
 }
