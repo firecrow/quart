@@ -6,9 +6,13 @@ void onStmt(QrtMapper *map, QrtStatement *stmt){
     QrtCell *cell = stmt->cell_root;
     print_node(cell, map->space);
     QrtOpp *opp;
+    /* opp call */
     if((opp = asQrtOpp(cell->value))){
         stmt->reg = opp->call(opp, cell->next);
     }
+    /* define : */
+    /* asign  & */
+    /* reg */
     print_stmt(stmt, map->space);
 }
 void onCell(QrtMapper *map, QrtCell *cell){
