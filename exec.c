@@ -1,5 +1,4 @@
 QrtCell *call(QrtCtx *ctx, QrtCell *actor, QrtCell *args){
-    printf("call called\n");
     QrtOpp *opp;
     QrtSymbol *symbol;
     CtlAbs *actor_value =  actor->value;
@@ -49,7 +48,6 @@ QrtCell *call(QrtCtx *ctx, QrtCell *actor, QrtCell *args){
 }
 
 int exec(QrtCtx *ctx){
-    printf("exec\n");
     QrtCell *cell = ctx->start;
     int value;
 
@@ -57,7 +55,7 @@ int exec(QrtCtx *ctx){
         cell = call(ctx, cell, cell->next);
         if(asCtlInt(ctx->reg)) value  = asCtlInt(ctx->reg)->value;
         else value = 0;
-        printf("%d\n", value);
+        printf("reg:%d\n", value);
     }
     return 1;
 }
