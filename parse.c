@@ -53,22 +53,10 @@ enum classes identify_token(CtlCounted *token){
 }
 
 QrtCell *make_token(struct qrt_ctx *ctx, CtlCounted *name, QrtCell *current){
-    printf("name:%s\n", ctl_to_cstr(name));
     struct qrt_cell *node = qrt_cell_alloc();
     enum classes token_type = identify_token(name);
     if(token_type == CLASS_OPP){
         QrtOpp *opp = qrt_opp_alloc(name->data[0]);
-    /*
-        switch(opp->opp_type){
-            case '*':
-            case '+':
-            case '-':
-                opp->call = math_call;
-                break;
-            default: 
-                break;
-        }
-    */
         node->value = (CtlAbs *)opp;
 
     }else if(token_type == CLASS_BLOCK){
@@ -88,8 +76,10 @@ QrtCell *make_token(struct qrt_ctx *ctx, CtlCounted *name, QrtCell *current){
         ctx->start = node;
     }else{
         current->next = node;
-        node->previous = current;
+        node->prev = current;
     }
+
+    printf("%s:%s\n", ctl_to_cstr(name), get_class_str(node->value));
     return node;
 }
 

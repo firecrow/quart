@@ -47,7 +47,6 @@ char *get_class_str(CtlAbs *value){
         return "SPORATOR";
     }else if(class == CLASS_STATEMENT){
         return "STATEMENT";
-    /*
     }else if(class == CLASS_SYMBOL){
         QrtSymbol *symbol = (QrtSymbol *)value;
         if(symbol->type == ':') return "DEFINITION";
@@ -55,7 +54,6 @@ char *get_class_str(CtlAbs *value){
         else if(symbol->type == '&') return "REASSIGN";
         else return "SYMBOL";
         return "POO";
-    */
     }else if(class == CLASS_CELL){
         return "CELL";
     }

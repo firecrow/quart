@@ -5,7 +5,7 @@ typedef struct qrt_cell {
     int status;
     CtlAbs *value;
     struct qrt_cell *next;
-    struct qrt_cell *previous;
+    struct qrt_cell *prev;
 } QrtCell;
 
 struct qrt_statement;
