@@ -13,7 +13,6 @@
 #include "../crowtils/tested.c" 
 #include "core.c"
 #include "utils.c"
-#include "debug.c"
 
 CtlCounted *token_out;
 Crray *tokens;
@@ -23,7 +22,6 @@ QrtCell *make_token_mock(struct qrt_ctx *ctx, CtlCounted *name, QrtCell *current
 }
 
 #include "parse.c"
-#include "build.c"
 #include "exec.c"
  
 
