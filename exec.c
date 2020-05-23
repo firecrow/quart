@@ -1,3 +1,4 @@
+/* Copyright 2020 Firecrow Silvernight (fire@firecrow.com) licensed under the MIT License see LICENSE file */
 QrtCell *call(QrtCtx *ctx, QrtCell *actor, QrtCell *args){
     QrtOpp *opp;
     QrtSymbol *symbol;
