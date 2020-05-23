@@ -1,5 +1,4 @@
 CtlAbs *math_call(QrtOpp *opp, QrtCell * args){
-     
     char type = opp->opp_type;
 
     CtlInt *value = ctl_int_alloc(asCtlInt(args->value)->value);

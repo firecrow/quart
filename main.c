@@ -12,18 +12,15 @@
 #include "../crowtils/treeprint.c"
 #include "core.c"
 #include "utils.c"
-#include "debug.c"
-#include "parse.c"
-#include "build.c"
 #include "exec.c"
-
+#include "behavior.c"
+#include "parse.c"
 
 int run(char *source){
-    printf("source\n%s\n---------------\n",source);
-    QrtCtx *ctx = build(source);
-    /*CtlAbs *reg = exec(ctx);*/
-    print_blocks(ctx);
-    /*exec(ctx);*/
+    printf(">\n");
+    QrtCtx *ctx = parse(source);
+    exec(ctx);
+    return 0;
 }
 
 int main(){
@@ -34,12 +31,21 @@ int main(){
     char *x = ":x 3 :y 3; :z * x y\n :out {\nwrite h\nwrite j \n} out :h 10\n:min {\n .x 10 :z 0 if { x < z } then {x} else {z}\n} min :z 5; min :z 17\n &x 5 &y 10";
 
 
+    /* basic arithmetic and variables */
     run("* 5 7");
     run("* 5 7 12"); 
+    run("+ 1 2 4"); 
+    run("- 10 5"); 
+    /*
     run(":x 10\n+ x 13"); 
-    run("{+ 10 x} :x 3");
     run(":y 8\n&y 10\n- 25 y");
-    run(":run {* :x :y }\nrun :x 1 :y 2");
+    */
+    /* function literals and pointers*/
+    /*
+    run("{+ 10 x} :x 3");
+    run(":run {* :x :y }\nrun :x 1 :y 2\n:ptr run\nptr :x 100 :h 3");
+    */
+    /* lexical scoped symbols*/
 
     return 0;
 }

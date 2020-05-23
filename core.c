@@ -1,7 +1,43 @@
 /* Copyright 2020 Firecrow Silvernight (fire@firecrow.com) licensed under the MIT License see LICENSE file */
 
+typedef struct qrt_cell {
+    struct base base;
+    int status;
+    CtlAbs *value;
+    struct qrt_cell *next;
+    struct qrt_cell *previous;
+} QrtCell;
 
 
+typedef struct qrt_ctx {
+    struct base base;
+    CtlCounted *shelf;
+    QrtCell *start; 
+    CtlAbs *reg;
+} QrtCtx;
+
+int qrt_ctx_id = 0;
+struct qrt_ctx * qrt_ctx_alloc(){
+    struct qrt_ctx *ctx;
+    ctl_xptr(ctx = malloc(sizeof(struct qrt_ctx)));
+    bzero(ctx, sizeof(struct qrt_ctx));
+    ctx->base.class = CLASS_CTX;
+    ctx->base.id = ++qrt_ctx_id;
+    return ctx;
+}
+
+int qrt_cell_id=0;
+struct qrt_cell *qrt_cell_alloc(){
+    struct qrt_cell *node;
+    ctl_xptr(node = malloc(sizeof(struct qrt_cell)));
+    bzero(node, sizeof(struct qrt_cell));
+    node->base.class = CLASS_CELL;
+    node->base.id = ++qrt_cell_id;
+    node->status = CTL_NOT_STARTED;
+    return node;
+}
+
+/* new */
 enum qrt_opp_types {
     QRT_PLUS = '+',
     QRT_MINUS = '-',
@@ -11,14 +47,6 @@ enum qrt_opp_types {
     QRT_LESS = '<',
     QRT_NOT = '!'
 };
-
-typedef struct qrt_cell {
-    struct base base;
-    int status;
-    CtlAbs *value;
-    struct qrt_cell *next;
-    struct qrt_cell *previous;
-} QrtCell;
 
 
 struct qrt_statement;
@@ -45,20 +73,11 @@ typedef struct qrt_statement {
     CtlAbs * reg;
 } QrtStatement;
 
-typedef struct qrt_ctx {
-    struct base base;
-    QrtBlock *root;
-    CtlCounted *shelf;
-    QrtCell *start; 
-} QrtCtx;
-
-/* may change to _func*/
+/* may change to _func */
 struct qrt_opp;
-typedef CtlAbs *(*call)(struct qrt_opp *opp, QrtCell *args);
 typedef struct qrt_opp {
     struct base base;
     char opp_type;
-    call call;
 } QrtOpp;
 
 typedef struct qrt_symbol {
@@ -109,17 +128,6 @@ QrtSymbol *qrt_symbol_alloc(QrtCell *parent, CtlCounted *name){
     return symbol;
 }
 
-int qrt_cell_id=0;
-struct qrt_cell *qrt_cell_alloc(){
-    struct qrt_cell *node;
-    ctl_xptr(node = malloc(sizeof(struct qrt_cell)));
-    bzero(node, sizeof(struct qrt_cell));
-    node->base.class = CLASS_CELL;
-    node->base.id = ++qrt_cell_id;
-    node->status = CTL_NOT_STARTED;
-    return node;
-}
-
 int qrt_statement_id=0;
 QrtStatement *qrt_statement_alloc(QrtBlock *parent, QrtStatement *previous, struct qrt_cell *root){
     QrtStatement *statement;
@@ -142,17 +150,6 @@ QrtBlock *qrt_block_alloc(char type, QrtBlock *parent){
     block->values = ctl_tree_alloc(ctl_tree_counted_cmp);
     block->type = type;
     return block;
-}
-
-int qrt_ctx_id = 0;
-struct qrt_ctx * qrt_ctx_alloc(){
-    struct qrt_ctx *ctx;
-    ctl_xptr(ctx = malloc(sizeof(struct qrt_ctx)));
-    bzero(ctx, sizeof(struct qrt_ctx));
-    ctx->base.class = CLASS_CTX;
-    ctx->base.id = ++qrt_ctx_id;
-    ctx->root = qrt_block_alloc('{', NULL);
-    return ctx;
 }
 
 QrtBlock *ctl_block_incr(QrtBlock *block){

@@ -30,10 +30,12 @@ char *get_class_str(CtlAbs *value){
     int class = value->base.class;
     if(class == CLASS_INT){
         return ctl_counted_to_cstr(ctl_counted_format("INT(%d)", asCtlInt(value)->value));
+    /*
     }else if(class == CLASS_BLOCK){
         QrtBlock *block = (QrtBlock *)value;
         if(block->type == '{') return "BLOCK_OPEN";
         else return  "BLOCK_CLOSE";
+    */
     }else if(class == CLASS_COUNTED){
         return "COUNTED";
     }else if(class == CLASS_SEP){
@@ -44,6 +46,7 @@ char *get_class_str(CtlAbs *value){
         return "SPORATOR";
     }else if(class == CLASS_STATEMENT){
         return "STATEMENT";
+    /*
     }else if(class == CLASS_SYMBOL){
         QrtSymbol *symbol = (QrtSymbol *)value;
         if(symbol->type == ':') return "DEFINITION";
@@ -51,6 +54,7 @@ char *get_class_str(CtlAbs *value){
         else if(symbol->type == '&') return "REASSIGN";
         else return "SYMBOL";
         return "POO";
+    */
     }else if(class == CLASS_CELL){
         return "CELL";
     }

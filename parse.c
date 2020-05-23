@@ -58,6 +58,7 @@ QrtCell *make_token(struct qrt_ctx *ctx, CtlCounted *name, QrtCell *current){
     enum classes token_type = identify_token(name);
     if(token_type == CLASS_OPP){
         QrtOpp *opp = qrt_opp_alloc(name->data[0]);
+    /*
         switch(opp->opp_type){
             case '*':
             case '+':
@@ -67,7 +68,9 @@ QrtCell *make_token(struct qrt_ctx *ctx, CtlCounted *name, QrtCell *current){
             default: 
                 break;
         }
+    */
         node->value = (CtlAbs *)opp;
+
     }else if(token_type == CLASS_BLOCK){
         node->value = (CtlAbs *)qrt_block_alloc(name->data[0], NULL); 
     }else if(token_type == CLASS_INT){
@@ -95,11 +98,11 @@ QrtCell *make_token(struct qrt_ctx *ctx, CtlCounted *name, QrtCell *current){
 #endif
 
 
-struct qrt_ctx *parse(char *source){
+QrtCtx *parse(char *source){
     char *p = source;
-    struct qrt_ctx *ctx = qrt_ctx_alloc();
+    QrtCtx *ctx = qrt_ctx_alloc();
     ctx->shelf = ctl_counted_alloc(NULL, 0);
-    struct qrt_cell *cell;
+    QrtCell *cell;
 
     if(p == '\0') 
         return NULL;

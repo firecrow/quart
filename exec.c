@@ -1,70 +1,63 @@
-/* Copyright 2020 Firecrow Silvernight (fire@firecrow.com) licensed under the MIT License see LICENSE file */
-void onBlock(QrtMapper *map, QrtBlock *block){
-    print_block(block, map->space, 0);
-}
-void onStmt(QrtMapper *map, QrtStatement *stmt){
-    QrtCell *cell = stmt->cell_root;
-    print_node(cell, map->space);
+QrtCell *call(QrtCtx *ctx, QrtCell *actor, QrtCell *args){
+    printf("call called\n");
     QrtOpp *opp;
-    /* opp call */
-    if((opp = asQrtOpp(cell->value))){
-        stmt->reg = opp->call(opp, cell->next);
-    }
-    /* define : */
-    /* asign  & */
-    /* reg */
-    print_stmt(stmt, map->space);
-}
-void onCell(QrtMapper *map, QrtCell *cell){
-    print_node(cell, map->space);
-}
+    QrtSymbol *symbol;
+    CtlAbs *actor_value =  actor->value;
+    if(!args)
+        return actor;
+    /* func */
+    if((opp = asQrtOpp(actor_value))){
+        char type = opp->opp_type;
 
-void exec_expressions(QrtBlock *block, QrtStatement *stmt, QrtMapper *map){
-    QrtCell *next = stmt->cell_root;
-    while(next){
-        if(map->onCell)
-            map->onCell(map, next);
-        next = next->next;
-    }
-}
-
-void exec_statements(QrtBlock *block, QrtMapper *map){
-    QrtStatement *stmt =  block->statement_root;
-    while(stmt){
-        if(map->onStmt)
-            map->onStmt(map, stmt);
-        exec_expressions(block, stmt, map);
-        stmt = stmt->next;
-    }
-}
-
-
-void mapper(QrtCtx *ctx, QrtMapper *map){
-    Crray *stack = ctl_crray_alloc(16);
-    QrtBlock *block = ctx->root;
-    QrtBlock *prev;
-    QrtBlock *current;
-    ctl_crray_push(stack, (CtlAbs *)block);
-    while(block){
-        if(map->onBlock)
-            map->onBlock(map, block);
-        exec_statements(block, map);
-        if(block->branch){
-            map->space->length += 4;
-            ctl_crray_push(stack, (CtlAbs *)block);
-            block = block->branch;
-            if(block->branch)
-                continue;
-            if(map->onBlock)
-                map->onBlock(map, block);
-            exec_statements(block, map);
+        CtlInt *value = ctl_int_alloc(asCtlInt(args->value)->value);
+        args = args->next;
+        while(args){
+            if(!asCtlInt(args->value))
+                break;
+            switch(type){
+                case '*':
+                    value->value *=  asCtlInt(args->value)->value;
+                    break;
+                case '+':
+                    value-> value += asCtlInt(args->value)->value;
+                    break;
+                case '-':
+                    value->value -= asCtlInt(args->value)->value;
+                    break;
+                default:
+                    break;
+            }
+            args = args->next;
         }
-        if(block->next == NULL && stack->length > 1){
-            map->space->length -= 4;
-            prev = asQrtBlock(ctl_crray_pop(stack, -1)); 
-            block = prev;
+        ctx->reg = (CtlAbs *)value;
+        return args;
+
+    }
+    if((symbol = asQrtSymbol(actor_value))){
+        /* define */
+        if(symbol->type == ':'){
+            symbol->value = (CtlAbs *)args->value;
+        /* assign */
+        }else if(symbol->type == '&'){
+            symbol->value = (CtlAbs *)args->value;
         }
-        block = block->next;
-    } 
+        ctx->reg = NULL;
+        return args->next;
+    }
+    ctx->reg = NULL;
+    return args->next;
 }
 
+int exec(QrtCtx *ctx){
+    printf("exec\n");
+    QrtCell *cell = ctx->start;
+    int value;
+
+    while(cell){
+        cell = call(ctx, cell, cell->next);
+        if(asCtlInt(ctx->reg)) value  = asCtlInt(ctx->reg)->value;
+        else value = 0;
+        printf("%d\n", value);
+    }
+    return 1;
+}
