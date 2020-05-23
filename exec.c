@@ -1,19 +1,18 @@
 /* Copyright 2020 Firecrow Silvernight (fire@firecrow.com) licensed under the MIT License see LICENSE file */
 
-int get_value_if_symbol(QrtBlock *block, QrtCell *args, int local){
+CtlAbs *get_compatible_value(QrtBlock *block, QrtCell *cell){
     QrtSymbol *symbol;
-    CtlInt *symbol_value;
-    if(!asCtlInt(args->value)){
-        if((symbol = asQrtSymbol(args->value))){
-            if(symbol->type == 'x'){
-                symbol_value = asCtlInt(ctl_tree_get(block->namespace, (CtlAbs *)symbol->name));
-                if(symbol_value)
-                    return symbol_value->value;
-            }
-        }
+    CtlAbs *symbol_value;
+    if((symbol = asQrtSymbol(cell->value))){
+        symbol_value = ctl_tree_get(block->namespace, (CtlAbs *)symbol->name);
+        return symbol_value;
     }
-    return local;
+    if(asCtlInt(cell->value)){
+        return cell->value;
+    }
+    return NULL;
 }
+
 
 QrtCell *call(QrtCtx *ctx, QrtBlock *block, QrtCell *actor, QrtCell *args){
     print_cell(actor);
@@ -26,11 +25,15 @@ QrtCell *call(QrtCtx *ctx, QrtBlock *block, QrtCell *actor, QrtCell *args){
     if((opp = asQrtOpp(actor_value))){
         char type = opp->opp_type;
 
-        CtlInt *value = ctl_int_alloc(asCtlInt(args->value)->value);
+        CtlInt *value = asCtlInt(get_compatible_value(block, args));
         int local =  0;
         args = args->next;
         while(args){
-            local = get_value_if_symbol(block, args, local);
+            value = asCtlInt(get_compatible_value(block, args));
+            if(!value){
+                block->reg = 0;
+                return args->next;
+            }
             switch(type){
                 case '*':
                     value->value *= local;
