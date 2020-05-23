@@ -36,9 +36,9 @@ int main(){
     run("* 5 7 12"); 
     run("+ 1 2 4"); 
     run("- 10 5"); 
-    /*
     run(":x 10\n+ x 13"); 
     run(":y 8\n&y 10\n- 25 y");
+    /*
     */
     /* function literals and pointers*/
     /*

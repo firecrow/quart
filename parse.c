@@ -102,6 +102,7 @@ QrtCtx *parse(char *source){
     char *p = source;
     QrtCtx *ctx = qrt_ctx_alloc();
     ctx->shelf = ctl_counted_alloc(NULL, 0);
+    ctx->block = qrt_block_alloc('{', NULL);
     QrtCell *cell;
 
     if(p == '\0') 

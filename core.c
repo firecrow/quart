@@ -8,13 +8,37 @@ typedef struct qrt_cell {
     struct qrt_cell *previous;
 } QrtCell;
 
+struct qrt_statement;
+typedef struct qrt_block {
+    struct base base;
+    struct qrt_block *parent;
+    struct qrt_block *next;
+    struct qrt_block *branch;
+    struct qrt_statement *statement_root;
+    struct qrt_statement *statement_next;
+    CtlTree *namespace;
+    CtlTree *values;
+    char type;
+} QrtBlock;
 
 typedef struct qrt_ctx {
     struct base base;
     CtlCounted *shelf;
+    QrtBlock *block;
     QrtCell *start; 
     CtlAbs *reg;
 } QrtCtx;
+
+typedef struct qrt_statement {
+    struct base base;
+    struct qrt_block *parent;
+    struct qrt_statement *previous;
+    struct qrt_statement *next;
+    QrtCell *cell_lead;
+    QrtCell *cell_root;
+    QrtCell *cell_next;
+    CtlAbs * reg;
+} QrtStatement;
 
 int qrt_ctx_id = 0;
 struct qrt_ctx * qrt_ctx_alloc(){
@@ -49,29 +73,6 @@ enum qrt_opp_types {
 };
 
 
-struct qrt_statement;
-typedef struct qrt_block {
-    struct base base;
-    struct qrt_block *parent;
-    struct qrt_block *next;
-    struct qrt_block *branch;
-    struct qrt_statement *statement_root;
-    struct qrt_statement *statement_next;
-    CtlTree *namespace;
-    CtlTree *values;
-    char type;
-} QrtBlock;
-
-typedef struct qrt_statement {
-    struct base base;
-    struct qrt_block *parent;
-    struct qrt_statement *previous;
-    struct qrt_statement *next;
-    QrtCell *cell_lead;
-    QrtCell *cell_root;
-    QrtCell *cell_next;
-    CtlAbs * reg;
-} QrtStatement;
 
 /* may change to _func */
 struct qrt_opp;

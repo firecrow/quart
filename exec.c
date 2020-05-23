@@ -3,6 +3,7 @@ QrtCell *call(QrtCtx *ctx, QrtCell *actor, QrtCell *args){
     QrtOpp *opp;
     QrtSymbol *symbol;
     CtlAbs *actor_value =  actor->value;
+    printf("actor_value:%s\n", get_class_str(actor_value));
     if(!args)
         return actor;
     /* func */
@@ -12,8 +13,10 @@ QrtCell *call(QrtCtx *ctx, QrtCell *actor, QrtCell *args){
         CtlInt *value = ctl_int_alloc(asCtlInt(args->value)->value);
         args = args->next;
         while(args){
-            if(!asCtlInt(args->value))
+            if(!asCtlInt(args->value)){
+                args = args->next;
                 break;
+            }
             switch(type){
                 case '*':
                     value->value *=  asCtlInt(args->value)->value;
@@ -34,6 +37,7 @@ QrtCell *call(QrtCtx *ctx, QrtCell *actor, QrtCell *args){
 
     }
     if((symbol = asQrtSymbol(actor_value))){
+        printf("symbol:%s\n", ctl_to_cstr(symbol->name));
         /* define */
         if(symbol->type == ':'){
             symbol->value = (CtlAbs *)args->value;
@@ -56,7 +60,7 @@ int exec(QrtCtx *ctx){
         cell = call(ctx, cell, cell->next);
         if(asCtlInt(ctx->reg)) value  = asCtlInt(ctx->reg)->value;
         else value = 0;
-        printf("reg:%d\n", value);
+        printf("> reg:%d\n", value);
     }
     return 1;
 }
