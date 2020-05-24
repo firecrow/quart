@@ -1,48 +1,73 @@
 /* Copyright 2020 Firecrow Silvernight (fire@firecrow.com) licensed under the MIT License see LICENSE file */
 
-CtlAbs *get_compatible_value(QrtBlock *block, QrtCell *cell){
+CtlAbs *get_compatible_value(QrtBlock *block, QrtCell *cell, int class){
+    print_cell(cell);
+    printf("1\n");
     QrtSymbol *symbol;
-    CtlAbs *symbol_value;
+    CtlAbs *value;
+
     if((symbol = asQrtSymbol(cell->value))){
-        symbol_value = ctl_tree_get(block->namespace, (CtlAbs *)symbol->name);
-        return symbol_value;
+        printf("as symb\n");
+        print_block(block);
+        value = ctl_tree_get(block->namespace, (CtlAbs *)symbol->name);
+    }else{
+        value = cell->value;
     }
-    if(asCtlInt(cell->value)){
-        return cell->value;
+    if(!value){
+        return NULL;
     }
+    if(value->base.class != class){
+        printf("2\n");
+        return NULL;
+    }
+    printf("3\n");
+    if(asCtlInt(value)){
+        return value;
+    }
+    printf("4\n");
     return NULL;
 }
 
 
 QrtCell *call(QrtCtx *ctx, QrtBlock *block, QrtCell *actor, QrtCell *args){
+    printf("call...");
     print_cell(actor);
     QrtOpp *opp;
     QrtSymbol *symbol;
+    QrtSep *sep = NULL;
+    CtlInt *value =  NULL;
+    CtlInt *local = NULL;;
     CtlAbs *actor_value =  actor->value;
     if(!args)
         return actor;
     /* func */
+    if((sep = asQrtSep(actor_value))){
+        ctx->reg = NULL;
+        return args;
+    }
     if((opp = asQrtOpp(actor_value))){
         char type = opp->opp_type;
-
-        CtlInt *value = asCtlInt(get_compatible_value(block, args));
-        int local =  0;
-        args = args->next;
         while(args){
-            value = asCtlInt(get_compatible_value(block, args));
-            if(!value){
-                block->reg = 0;
-                return args->next;
+            local = asCtlInt(get_compatible_value(block, args, CLASS_INT));
+            printf("=======================%d\n", local->value);
+            if(value == NULL){
+                value = ctl_int_alloc(local->value);
+                args = args->next;
+                continue;
+            }
+            if(!local){
+                ctx->reg = 0;
+                return args;
             }
             switch(type){
                 case '*':
-                    value->value *= local;
+                    value->value *= local->value;
                     break;
                 case '+':
-                    value-> value += local;
+                    value->value += local->value;
                     break;
                 case '-':
-                    value->value -= local;
+                    value->value -= local->value;
                     break;
                 default:
                     break;
@@ -51,7 +76,6 @@ QrtCell *call(QrtCtx *ctx, QrtBlock *block, QrtCell *actor, QrtCell *args){
         }
         ctx->reg = (CtlAbs *)value;
         return args;
-
     }
     if((symbol = asQrtSymbol(actor_value))){
         if(!is_variable_value(args->value)){
@@ -60,6 +84,8 @@ QrtCell *call(QrtCtx *ctx, QrtBlock *block, QrtCell *actor, QrtCell *args){
         }
         if(symbol->type == ':'){
             symbol->value = (CtlAbs *)args->value;
+            symbol->name->length--;
+            symbol->name->data++;
             ctl_tree_insert(block->namespace, (CtlAbs *)symbol->name, symbol->value);
         }else if(symbol->type == '&'){
             symbol->value = (CtlAbs *)args->value;

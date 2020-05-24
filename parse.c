@@ -79,7 +79,6 @@ QrtCell *make_token(struct qrt_ctx *ctx, CtlCounted *name, QrtCell *current){
         node->prev = current;
     }
 
-    printf("%s:%s\n", ctl_to_cstr(name), get_class_str(node->value));
     return node;
 }
 

@@ -189,6 +189,13 @@ QrtOpp *asQrtOpp(CtlAbs *x){
     return (QrtOpp *)x; 
 }
 
+QrtSep *asQrtSep(CtlAbs *x){
+    if(x && x->base.class != CLASS_SEP){
+        return NULL;
+    }
+    return (QrtSep *)x; 
+}
+
 typedef struct qrt_mapper {
     struct base base;
     void (*onBlock)(struct qrt_mapper *mapper, QrtBlock *block);
