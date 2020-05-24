@@ -1,14 +1,10 @@
 /* Copyright 2020 Firecrow Silvernight (fire@firecrow.com) licensed under the MIT License see LICENSE file */
 
 CtlAbs *get_compatible_value(QrtBlock *block, QrtCell *cell, int class){
-    print_cell(cell);
-    printf("1\n");
     QrtSymbol *symbol;
     CtlAbs *value;
 
     if((symbol = asQrtSymbol(cell->value))){
-        printf("as symb\n");
-        print_block(block);
         value = ctl_tree_get(block->namespace, (CtlAbs *)symbol->name);
     }else{
         value = cell->value;
@@ -17,21 +13,16 @@ CtlAbs *get_compatible_value(QrtBlock *block, QrtCell *cell, int class){
         return NULL;
     }
     if(value->base.class != class){
-        printf("2\n");
         return NULL;
     }
-    printf("3\n");
     if(asCtlInt(value)){
         return value;
     }
-    printf("4\n");
     return NULL;
 }
 
 
 QrtCell *call(QrtCtx *ctx, QrtBlock *block, QrtCell *actor, QrtCell *args){
-    printf("call...");
-    print_cell(actor);
     QrtOpp *opp;
     QrtSymbol *symbol;
     QrtSep *sep = NULL;
@@ -49,7 +40,6 @@ QrtCell *call(QrtCtx *ctx, QrtBlock *block, QrtCell *actor, QrtCell *args){
         char type = opp->opp_type;
         while(args){
             local = asCtlInt(get_compatible_value(block, args, CLASS_INT));
-            printf("=======================%d\n", local->value);
             if(value == NULL){
                 value = ctl_int_alloc(local->value);
                 args = args->next;
