@@ -43,8 +43,8 @@ char *get_class_str(CtlAbs *value){
         return "SEPORATOR";
     }else if(class == CLASS_OPP){
         return "OPERATOR";
-    }else if(class == CLASS_SEP){
-        return "SPORATOR";
+    }else if(class == CLASS_BLOCK){
+        return "BLOCK";
     }else if(class == CLASS_STATEMENT){
         return "STATEMENT";
     }else if(class == CLASS_SYMBOL){

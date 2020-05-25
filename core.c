@@ -17,7 +17,7 @@ typedef struct qrt_block {
     struct qrt_statement *statement_root;
     struct qrt_statement *statement_next;
     CtlTree *namespace;
-    CtlTree *values;
+    QrtCell *cell;
     char type;
 } QrtBlock;
 
@@ -26,6 +26,7 @@ typedef struct qrt_ctx {
     CtlCounted *shelf;
     QrtBlock *block;
     QrtCell *start; 
+    Crray *stack;
     CtlAbs *reg;
 } QrtCtx;
 
@@ -47,6 +48,7 @@ struct qrt_ctx * qrt_ctx_alloc(){
     bzero(ctx, sizeof(struct qrt_ctx));
     ctx->base.class = CLASS_CTX;
     ctx->base.id = ++qrt_ctx_id;
+    ctx->stack = ctl_crray_alloc(16);
     return ctx;
 }
 
@@ -148,7 +150,6 @@ QrtBlock *qrt_block_alloc(char type, QrtBlock *parent){
     block->base.class = CLASS_BLOCK;
     block->base.id =  ++qrt_block_id;
     block->namespace = ctl_tree_alloc(ctl_tree_counted_cmp);
-    block->values = ctl_tree_alloc(ctl_tree_counted_cmp);
     block->type = type;
     return block;
 }

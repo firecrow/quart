@@ -18,7 +18,7 @@
 #include "parse.c"
 
 int run(char *source){
-    printf(">%s\n", source);
+    printf("---------------------------------------------------->\n%s\n", source);
     QrtCtx *ctx = parse(source);
     exec(ctx);
     return 0;
@@ -33,19 +33,17 @@ int main(){
 
 
     /* basic arithmetic and variables */
+    /*
     run("* 5 7");
     run("* 5 7 12"); 
     run("+ 1 2 4"); 
     run("- 10 5"); 
     run(":x 10\n+ x 13"); 
-    /*
     run(":y 8\n&y 10\n- 25 y");
     */
-    /*
-    */
     /* function literals and pointers*/
+    run("{+ 10 x} :x 3\n");
     /*
-    run("{+ 10 x} :x 3");
     run(":run {* :x :y }\nrun :x 1 :y 2\n:ptr run\nptr :x 100 :h 3");
     */
     /* lexical scoped symbols*/
