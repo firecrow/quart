@@ -36,6 +36,7 @@ QrtCell *call(QrtCtx *ctx, QrtBlock *block, QrtCell *actor, QrtCell *args){
     QrtSep *sep = NULL;
     CtlInt *local = NULL;;
     CtlAbs *actor_value =  actor->value;
+    QrtBlock *ablock;
     QrtBlock *nblock;
     if((opp = asQrtOpp(actor_value))){
         char type = opp->opp_type;
@@ -43,7 +44,7 @@ QrtCell *call(QrtCtx *ctx, QrtBlock *block, QrtCell *actor, QrtCell *args){
             print_cell(args);
             local = asCtlInt(get_compatible_value(block, args, CLASS_INT));
             if(ctx->reg == NULL){
-                ctx->reg = ctl_int_alloc(local->value);
+                ctx->reg = (CtlAbs *)ctl_int_alloc(local->value);
                 args = args->next;
                 continue;
             }
@@ -93,12 +94,19 @@ QrtCell *call(QrtCtx *ctx, QrtBlock *block, QrtCell *actor, QrtCell *args){
                 }
                 args = args->next;
             }
+        }else{
+            ablock = asQrtBlock(ctl_crray_pop(ctx->stack, -1));
+            return ablock->cell;
         }
     }
     if((sep = asQrtSep(actor_value))){
         ctx->reg = NULL;
-        if(ctx->stack->length > 0){
-            if(nblock = asQrtBlock(ctl_crray_pop(ctx->stack, -1))){
+        if(ctx->stack->length){
+            nblock = asQrtBlock(ctl_crray_pop(ctx->stack, -1));
+            ablock = qrt_block_alloc('{', nblock);
+            ablock->cell = actor;
+            ctl_crray_push(ctx->stack, (CtlAbs *)ablock);
+            if(nblock){
                 return nblock->cell;
             }else{
                 printf("ERROR: block not found on stack\n");
@@ -110,6 +118,7 @@ QrtCell *call(QrtCtx *ctx, QrtBlock *block, QrtCell *actor, QrtCell *args){
 
 int exec(QrtCtx *ctx){
     QrtCell *cell = ctx->start;
+    QrtBlock *nblock;
     int value;
 
     QrtBlock *block = ctx->block;
@@ -118,6 +127,12 @@ int exec(QrtCtx *ctx){
         if(asCtlInt(ctx->reg)) value  = asCtlInt(ctx->reg)->value;
         else value = 0;
         printf("> reg:%d\n", value);
+        if(cell == NULL && ctx->stack->length){
+            nblock = asQrtBlock(ctl_crray_pop(ctx->stack, -1));
+            if(nblock)
+                cell = nblock->cell;
+            
+        }
     }
     print_block(block);
     return 1;
