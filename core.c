@@ -1,5 +1,10 @@
 /* Copyright 2020 Firecrow Silvernight (fire@firecrow.com) licensed under the MIT License see LICENSE file */
 
+enum qrt_states {
+    QRT_OPEN = 0,
+    QRT_AFTER_FUNC
+};
+
 typedef struct qrt_cell {
     struct base base;
     int status;
@@ -19,6 +24,7 @@ typedef struct qrt_block {
     CtlTree *namespace;
     QrtCell *cell;
     char type;
+    enum qrt_states state;
 } QrtBlock;
 
 typedef struct qrt_ctx {
@@ -177,7 +183,7 @@ QrtCell *asQrtCell(CtlAbs *x){
 }
 
 QrtBlock *asQrtBlock(CtlAbs *x){
-    if(x && x->base.class != CLASS_BLOCK){
+    if(!x || x->base.class != CLASS_BLOCK){
         return NULL;
     }
     return (QrtBlock *)x; 

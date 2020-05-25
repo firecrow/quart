@@ -84,7 +84,6 @@ QrtCell *call(QrtCtx *ctx, QrtBlock *block, QrtCell *actor, QrtCell *args){
         return args->next;
     }
     if((nblock = asQrtBlock(actor_value))){
-        /*print_block(nblock);*/
         if(nblock->type == '{'){
             ctl_crray_push(ctx->stack, (CtlAbs *)nblock);
             nblock->cell = args;
@@ -95,13 +94,17 @@ QrtCell *call(QrtCtx *ctx, QrtBlock *block, QrtCell *actor, QrtCell *args){
                 args = args->next;
             }
         }else{
-            ablock = asQrtBlock(ctl_crray_pop(ctx->stack, -1));
-            return ablock->cell;
+            if(ctx->stack->length){
+                ablock = asQrtBlock(ctl_crray_pop(ctx->stack, -1));
+                return ablock->cell;
+            }else{
+                return NULL;
+            }
         }
     }
     if((sep = asQrtSep(actor_value))){
         ctx->reg = NULL;
-        if(ctx->stack->length){
+        if(ctx->stack->length && block->state == QRT_AFTER_FUNC){
             nblock = asQrtBlock(ctl_crray_pop(ctx->stack, -1));
             ablock = qrt_block_alloc('{', nblock);
             ablock->cell = actor;
@@ -112,6 +115,7 @@ QrtCell *call(QrtCtx *ctx, QrtBlock *block, QrtCell *actor, QrtCell *args){
                 printf("ERROR: block not found on stack\n");
             }
         }
+        block->state = QRT_OPEN;
     }
     return args;
 }
