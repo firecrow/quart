@@ -36,7 +36,7 @@ void print_block(QrtBlock *block){
     if(iter->size(iter)){
         CtlTreeNode *node = NULL;
         while((node = iter->next(iter)) != NULL){
-            printf("\x1b[33m(%s):%s\x1b[0m\n", ctl_to_cstr(asCtlCounted(node->key)), get_class_str((CtlAbs *)node->data));
+            printf("\x1b[33m(%s):%s %s\x1b[0m\n", ctl_to_cstr(asCtlCounted(node->key)), get_class_str((CtlAbs *)node->data), get_node_value_str((CtlAbs *)node->data));
         }
     }
 

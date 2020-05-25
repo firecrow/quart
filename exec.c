@@ -2,6 +2,7 @@
 
 QrtCell *break_chain_cell(QrtCell *cell){
     QrtCell *next;
+    if(!cell) return NULL;
     next = cell->next;
     cell->next = NULL;
     return next;
@@ -72,11 +73,16 @@ QrtCell *call(QrtCtx *ctx, QrtBlock *block, QrtCell *actor, QrtCell *args){
         printf("1\n");
         if(symbol->type == 'x'){
             value = ctl_tree_get(block->namespace, (CtlAbs *)symbol->name);
-            if(!value) return;
+            printf("value exists %d\n", value != NULL);
+            if(!value){
+                printf("ERROR: value for symbol '%s' not found\n", ctl_to_cstr(symbol->name));
+                return NULL;
+            }
         }else{
             value = args->value;
         }
         if(!is_variable_value(value)){ 
+            printf("not a variable\n");
             ctx->reg = symbol->value;
             return args;
         }
@@ -88,32 +94,30 @@ QrtCell *call(QrtCtx *ctx, QrtBlock *block, QrtCell *actor, QrtCell *args){
         printf("3\n");
         if(symbol->type == ':' || symbol->type == '&'){
             printf("in assign\n");
-            if(nblock){
-                printf("block here %c/%c\n", block->type, symbol->type);
-                if(nblock->type == '{'){
-                    printf("assigning a block cell to a symbol------------------------------------------>\n");
-                    block->cell = args->next;
-                    block->type = 'x';
-                    while(args) {
-                        if((ablock = asQrtBlock(value)) && ablock->type == '}'){ break;  };
-                        args = args->next;
-                    }
-                    ctl_tree_insert(block->namespace, (CtlAbs *)symbol->name, symbol->value);
-                    symbol->value = value;
-                    symbol->name->length--;
-                    symbol->name->data++;
-                    ctl_tree_insert(block->namespace, (CtlAbs *)symbol->name, symbol->value);
-                    return break_chain_cell(args);
-                }
-            }
             symbol->value = value;
             symbol->name->length--;
             symbol->name->data++;
             ctl_tree_insert(block->namespace, (CtlAbs *)symbol->name, symbol->value);
+            if(nblock){
+                printf("block here %c/%c\n", block->type, symbol->type);
+                if(nblock->type == '{'){
+                    printf("assigning a block cell to a symbol------------------------------------------>\n");
+                    nblock->type = 'x';
+                    nblock->cell = args;
+                    while(args){
+                        if((nblock = asQrtBlock(args->value)) && nblock->type == '}'){
+                            break;
+                        }
+                        args = args->next;
+                    }
+                    return break_chain_cell(args);
+                }
+            }
         }else {
             printf("out of assign\n");
             printf("not a definition\n");
             nblock = asQrtBlock(value);
+            printf("%c/%c\n", symbol->type, nblock->type);
             if(nblock && symbol->type == 'x' && nblock->type == 'x'){ 
                 printf("retrieving a block cell to a symbol------------------------------------------<\n");
                 printf("block running \n");
