@@ -2,7 +2,8 @@
 
 enum qrt_states {
     QRT_OPEN = 0,
-    QRT_AFTER_FUNC
+    QRT_AFTER_FUNC,
+    QRT_TRIGGERED
 };
 
 typedef struct qrt_cell {
@@ -34,6 +35,7 @@ typedef struct qrt_ctx {
     QrtCell *start; 
     Crray *stack;
     CtlAbs *reg;
+    int indent;
 } QrtCtx;
 
 typedef struct qrt_statement {

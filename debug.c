@@ -41,6 +41,9 @@ void print_block(QrtBlock *block){
     }
 
 }
+void print_indent(int i){
+    while(i--){ printf(" ");}
+}
 
 void print_cell(QrtCell *cell){
     int prev_id = cell->prev ? cell->prev->base.id : -1;

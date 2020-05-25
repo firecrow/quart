@@ -44,7 +44,7 @@ int main(){
     /* function literals and pointers*/
     run("{+ 10 x} :x 3\n");
     run("{+ 10 x} :x 3\n- 10 20");
-    run("{+ x { - 7 15}:} :x 3\n- 10 20");
+    run("{+ x { - 7 15}:;} :x 3\n- 10 20");
     /*
     run(":run {* :x :y }\nrun :x 1 :y 2\n:ptr run\nptr :x 100 :h 3");
     */

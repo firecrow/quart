@@ -30,7 +30,7 @@ CtlAbs *get_compatible_value(QrtBlock *block, QrtCell *cell, int class){
 }
 
 QrtCell *call(QrtCtx *ctx, QrtBlock *block, QrtCell *actor, QrtCell *args){
-    printf("               ");print_cell(actor);
+    print_indent(ctx->indent);print_cell(actor);
     QrtOpp *opp;
     QrtSymbol *symbol;
     QrtSep *sep = NULL;
@@ -41,10 +41,8 @@ QrtCell *call(QrtCtx *ctx, QrtBlock *block, QrtCell *actor, QrtCell *args){
     if((opp = asQrtOpp(actor_value))){
         char type = opp->opp_type;
         while(args){
-            print_cell(args);
             local = asCtlInt(get_compatible_value(block, args, CLASS_INT));
             if(!local){
-                printf(".....");print_cell(args);
                 return args;
             }
             if(ctx->reg == NULL){
@@ -70,8 +68,11 @@ QrtCell *call(QrtCtx *ctx, QrtBlock *block, QrtCell *actor, QrtCell *args){
         return args;
     }
     if((symbol = asQrtSymbol(actor_value))){
-        if(!is_variable_value(args->value)){
-            ctx->reg = symbol->value;
+        if(symbol->type == ':' && block->state == QRT_AFTER_FUNC){
+            printf("TRIGERED\n");
+            block->state = QRT_TRIGGERED;
+        }
+        if(!is_variable_value(args->value)){ ctx->reg = symbol->value;
             return args;
         }
         if(symbol->type == ':' || symbol->type == '&'){
@@ -85,30 +86,38 @@ QrtCell *call(QrtCtx *ctx, QrtBlock *block, QrtCell *actor, QrtCell *args){
     }
     if((nblock = asQrtBlock(actor_value))){
         if(nblock->type == '{'){
+            ctx->indent += 4;
             ctl_crray_push(ctx->stack, (CtlAbs *)nblock);
+            /*
+            printf("AFTER_FUNC\n");
             nblock->cell = args;
+            block->state = QRT_AFTER_FUNC;
             while(args){
                 if((nblock = asQrtBlock(args->value)) && nblock->type == '}'){
                     return break_chain_cell(args); 
                 }
                 args = args->next;
             }
+            */
         }else{
+            ctx->indent -= 4;
+            /*
+            ctl_crray_push(ctx->stack, (CtlAbs *)nblock);
             if(ctx->stack->length){
                 ablock = asQrtBlock(ctl_crray_pop(ctx->stack, -1));
                 return ablock->cell;
             }else{
                 return NULL;
             }
+            */
         }
     }
     if((sep = asQrtSep(actor_value))){
         ctx->reg = NULL;
-        if(ctx->stack->length && block->state == QRT_AFTER_FUNC){
-            nblock = asQrtBlock(ctl_crray_pop(ctx->stack, -1));
-            ablock = qrt_block_alloc('{', nblock);
-            ablock->cell = actor;
-            ctl_crray_push(ctx->stack, (CtlAbs *)ablock);
+        if(ctx->stack->length && block->state == QRT_TRIGGERED ){
+            printf("triggered\n");
+            ctl_crray_pop(ctx->stack, -1);
+            nblock = asQrtBlock(ctl_crray_tail(ctx->stack));
             if(nblock){
                 return nblock->cell;
             }else{
@@ -130,7 +139,7 @@ int exec(QrtCtx *ctx){
         cell = call(ctx, block, cell, cell->next);
         if(asCtlInt(ctx->reg)) value  = asCtlInt(ctx->reg)->value;
         else value = 0;
-        printf("> reg:%d\n", value);
+        print_indent(ctx->indent);printf("> reg:%d\n", value);
         if(cell == NULL && ctx->stack->length){
             nblock = asQrtBlock(ctl_crray_pop(ctx->stack, -1));
             if(nblock)
