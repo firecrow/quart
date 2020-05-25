@@ -43,14 +43,14 @@ QrtCell *call(QrtCtx *ctx, QrtBlock *block, QrtCell *actor, QrtCell *args){
         while(args){
             print_cell(args);
             local = asCtlInt(get_compatible_value(block, args, CLASS_INT));
+            if(!local){
+                printf(".....");print_cell(args);
+                return args;
+            }
             if(ctx->reg == NULL){
                 ctx->reg = (CtlAbs *)ctl_int_alloc(local->value);
                 args = args->next;
                 continue;
-            }
-            if(!local){
-                printf(".....");print_cell(args);
-                return args;
             }
             switch(type){
                 case '*':
