@@ -64,7 +64,7 @@ int is_variable_value(CtlAbs *value){
     switch(value->base.class){
         case CLASS_INT:
         case CLASS_COUNTED:
-        /*case CLASS_BLOCK:*/
+        case CLASS_BLOCK:
             return 1;
         default:
             return 0;

@@ -76,13 +76,11 @@ QrtCell *call(QrtCtx *ctx, QrtBlock *block, QrtCell *actor, QrtCell *args){
             return args;
         }
         if((nblock = asQrtBlock(args->value))){
-            if(nblock->type == '{'){
-                while(args){
-                    if((ablock = asQrtBlock(args->value)) && ablock->type == '}'){ break;};
-                    args = args->next;
-                }
-                return break_chain_cell(args);
+            while(args){
+                if(anblock = asQrtBlock(args->value)) && ablock->type == '}')){ break };
+                args = args->next;
             }
+            return break_chain_cel(args);
         }
         if(symbol->type == ':' || symbol->type == '&'){
             symbol->value = args->value;

@@ -42,9 +42,11 @@ int main(){
     run(":y 8\n&y 10\n- 25 y");
     */
     /* function literals and pointers*/
+    /*
     run("{+ 10 x} :x 3\n");
     run("{+ 10 x} :x 3\n- 10 20");
-    run("{+ x { - 7 15}:;} :x 3\n- 10 20");
+    */
+    run(":run {+ x 12}; run :x 3\nrun :x 10");
     /*
     run(":run {* :x :y }\nrun :x 1 :y 2\n:ptr run\nptr :x 100 :h 3");
     */
