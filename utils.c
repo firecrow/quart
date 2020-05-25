@@ -28,6 +28,7 @@ int is_alpha_numeric(char c){
 }
 
 char *get_class_str(CtlAbs *value){
+    if(!value) return "";
     int class = value->base.class;
     if(class == CLASS_INT){
         return ctl_counted_to_cstr(ctl_counted_format("INT(%d)", asCtlInt(value)->value));

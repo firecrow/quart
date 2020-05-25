@@ -30,9 +30,10 @@ CtlAbs *get_compatible_value(QrtBlock *block, QrtCell *cell, int class){
 }
 
 QrtCell *call(QrtCtx *ctx, QrtBlock *block, QrtCell *actor, QrtCell *args){
-    print_indent(ctx->indent);print_cell(actor);
+    printf("...");print_indent(ctx->indent);print_cell(actor);
     QrtOpp *opp;
     QrtSymbol *symbol;
+    CtlAbs *value;
     QrtSep *sep = NULL;
     CtlInt *local = NULL;;
     CtlAbs *actor_value =  actor->value;
@@ -68,66 +69,88 @@ QrtCell *call(QrtCtx *ctx, QrtBlock *block, QrtCell *actor, QrtCell *args){
         return args;
     }
     if((symbol = asQrtSymbol(actor_value))){
-        if(symbol->type == ':' && block->state == QRT_AFTER_FUNC){
-            printf("TRIGERED\n");
-            block->state = QRT_TRIGGERED;
+        printf("1\n");
+        if(symbol->type == 'x'){
+            value = ctl_tree_get(block->namespace, (CtlAbs *)symbol->name);
+            if(!value) return;
+        }else{
+            value = args->value;
         }
-        if(!is_variable_value(args->value)){ ctx->reg = symbol->value;
+        if(!is_variable_value(value)){ 
+            ctx->reg = symbol->value;
             return args;
         }
-        if((nblock = asQrtBlock(args->value))){
-            if(nblock->type == '{'){
-                while(args){
-                    if((ablock = asQrtBlock(args->value)) && ablock->type == '}'){ break;};
-                    args = args->next;
-                }
-                return break_chain_cell(args);
-            }
-        }
+        printf("2\n");
+        nblock = asQrtBlock(value);
+        if(nblock)
+            print_block(nblock);
+
+        printf("3\n");
         if(symbol->type == ':' || symbol->type == '&'){
-            symbol->value = args->value;
+            printf("in assign\n");
+            if(nblock){
+                printf("block here %c/%c\n", block->type, symbol->type);
+                if(nblock->type == '{'){
+                    printf("assigning a block cell to a symbol------------------------------------------>\n");
+                    block->cell = args->next;
+                    block->type = 'x';
+                    while(args) {
+                        if((ablock = asQrtBlock(value)) && ablock->type == '}'){ break;  };
+                        args = args->next;
+                    }
+                    ctl_tree_insert(block->namespace, (CtlAbs *)symbol->name, symbol->value);
+                    symbol->value = value;
+                    symbol->name->length--;
+                    symbol->name->data++;
+                    ctl_tree_insert(block->namespace, (CtlAbs *)symbol->name, symbol->value);
+                    return break_chain_cell(args);
+                }
+            }
+            symbol->value = value;
             symbol->name->length--;
             symbol->name->data++;
             ctl_tree_insert(block->namespace, (CtlAbs *)symbol->name, symbol->value);
+        }else {
+            printf("out of assign\n");
+            printf("not a definition\n");
+            nblock = asQrtBlock(value);
+            if(nblock && symbol->type == 'x' && nblock->type == 'x'){ 
+                printf("retrieving a block cell to a symbol------------------------------------------<\n");
+                printf("block running \n");
+            }
         }
-        ctx->reg = args->value;
+        ctx->reg = value;
         return args->next;
     }
     if((sep = asQrtSep(actor_value))){
         ctx->reg = NULL;
-        if(ctx->stack->length && block->state == QRT_TRIGGERED ){
-            printf("triggered\n");
-            ctl_crray_pop(ctx->stack, -1);
-            nblock = asQrtBlock(ctl_crray_tail(ctx->stack));
-            if(nblock){
-                return nblock->cell;
-            }else{
-                printf("ERROR: block not found on stack\n");
-            }
-        }
-        block->state = QRT_OPEN;
     }
     return args;
 }
 
-int exec(QrtCtx *ctx){
-    QrtCell *cell = ctx->start;
-    QrtBlock *nblock;
+void exec_cells(QrtCtx *ctx, QrtBlock *block, QrtCell *cell){
     int value;
-
-    QrtBlock *block = ctx->block;
     while(cell){
         cell = call(ctx, block, cell, cell->next);
         if(asCtlInt(ctx->reg)) value  = asCtlInt(ctx->reg)->value;
         else value = 0;
         print_indent(ctx->indent);printf("> reg:%d\n", value);
+        /*
         if(cell == NULL && ctx->stack->length){
             nblock = asQrtBlock(ctl_crray_pop(ctx->stack, -1));
             if(nblock)
                 cell = nblock->cell;
             
         }
+        */
     }
+}
+
+int exec(QrtCtx *ctx){
+    QrtCell *cell = ctx->start;
+    QrtBlock *nblock;
+    QrtBlock *block = ctx->block;
+    exec_cells(ctx, block,  cell);
     print_block(block);
     return 1;
 }

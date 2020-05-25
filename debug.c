@@ -28,8 +28,8 @@ void print_block(QrtBlock *block){
     int prev_id = block->parent != NULL ? block->parent->base.id  : -1;
     int branch_id = block->branch != NULL ? block->branch->base.id  : -1;
 
-    printf("|%s id:%d p:%d n:%d branch:%d|\n",
-        block->type == '{' ? "BLOCK" : "BCELL", block->base.id, prev_id, next_id, branch_id 
+    printf("|%s %c id:%d p:%d n:%d branch:%d|\n",
+        block->type == '{' ? "BLOCK" : "BCELL", block->type, block->base.id, prev_id, next_id, branch_id 
     );
 
     CtlTreeIter *iter = ctl_tree_iter(block->namespace);

@@ -1,11 +1,5 @@
 /* Copyright 2020 Firecrow Silvernight (fire@firecrow.com) licensed under the MIT License see LICENSE file */
 
-enum qrt_states {
-    QRT_OPEN = 0,
-    QRT_AFTER_FUNC,
-    QRT_TRIGGERED
-};
-
 typedef struct qrt_cell {
     struct base base;
     int status;
@@ -25,7 +19,6 @@ typedef struct qrt_block {
     CtlTree *namespace;
     QrtCell *cell;
     char type;
-    enum qrt_states state;
 } QrtBlock;
 
 typedef struct qrt_ctx {
