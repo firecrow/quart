@@ -17,11 +17,11 @@ CtlAbs *fetch_value(CtlTree *namespace, CtlAbs *value){
     return value;
 }
 
-QrtCell *exec_cell(QrtBlock *block, QrtCell *actor, QrtCell *args){
+QrtCell *exec_cell(QrtCtx *ctx, QrtCell *actor, QrtCell *args){
     print_cell(actor);
 
     QrtSymbol *symbol;
-    QrtBlock *vblock, *closeb;
+    QrtBlock *vblock, *closeb, *ablock;
     CtlInt *qnumber;
     QrtOpp *opp;
 
@@ -33,6 +33,9 @@ QrtCell *exec_cell(QrtBlock *block, QrtCell *actor, QrtCell *args){
 
     if((symbol = asQrtSymbol(value))){
         printf("symbol---------%s\n", get_node_value_str(value));
+        if((ablock = asQrtBlock(symbol->value))){
+            printf("ablock baby %s\n", get_node_value_str(symbol->value));
+        }
     }
     if((vblock = asQrtBlock(value))){
         printf("block---------%s\n", get_node_value_str(value));
@@ -63,7 +66,7 @@ void exec(QrtCtx *ctx){
     if(!ctx->block) ctx->block = qrt_block_alloc('{', NULL);
     QrtBlock *block = ctx->block;
     while(cell){
-        cell = exec_cell(block, cell, cell->next);
+        cell = exec_cell(ctx, cell, cell->next);
     }
 }
 
