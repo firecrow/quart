@@ -8,16 +8,14 @@ typedef struct qrt_cell {
     struct qrt_cell *prev;
 } QrtCell;
 
-struct qrt_statement;
 typedef struct qrt_block {
     struct base base;
     struct qrt_block *parent;
     struct qrt_block *next;
     struct qrt_block *branch;
-    struct qrt_statement *statement_root;
-    struct qrt_statement *statement_next;
     CtlTree *namespace;
     QrtCell *cell;
+    CtlAbs *reg;
     char type;
 } QrtBlock;
 
@@ -30,17 +28,6 @@ typedef struct qrt_ctx {
     CtlAbs *reg;
     int indent;
 } QrtCtx;
-
-typedef struct qrt_statement {
-    struct base base;
-    struct qrt_block *parent;
-    struct qrt_statement *previous;
-    struct qrt_statement *next;
-    QrtCell *cell_lead;
-    QrtCell *cell_root;
-    QrtCell *cell_next;
-    CtlAbs * reg;
-} QrtStatement;
 
 int qrt_ctx_id = 0;
 struct qrt_ctx * qrt_ctx_alloc(){
@@ -132,18 +119,6 @@ QrtSymbol *qrt_symbol_alloc(QrtCell *parent, CtlCounted *name){
     return symbol;
 }
 
-int qrt_statement_id=0;
-QrtStatement *qrt_statement_alloc(QrtBlock *parent, QrtStatement *previous, struct qrt_cell *root){
-    QrtStatement *statement;
-    ctl_xptr(statement = malloc(sizeof(QrtStatement)));
-    statement->base.class = CLASS_STATEMENT;
-    statement->base.id = ++qrt_statement_id;
-    statement->previous = previous;
-    statement->parent = parent;
-    statement->cell_root = statement->cell_next = root;
-    return statement;
-}
-
 int qrt_block_id = 0;
 QrtBlock *qrt_block_alloc(char type, QrtBlock *parent){
     QrtBlock *block;
@@ -201,7 +176,6 @@ QrtSep *asQrtSep(CtlAbs *x){
 typedef struct qrt_mapper {
     struct base base;
     void (*onBlock)(struct qrt_mapper *mapper, QrtBlock *block);
-    void (*onStmt)(struct qrt_mapper *mapper, QrtStatement *stmt);
     void (*onCell)(struct qrt_mapper *mapper, QrtCell *cell);
     CtlCounted *space;
 }QrtMapper;
@@ -209,7 +183,6 @@ typedef struct qrt_mapper {
 
 QrtMapper *qrt_mapper_alloc(QrtCtx *ctx,
             void (*onBlock)(struct qrt_mapper *mapper, QrtBlock *block),
-            void (*onStmt)(struct qrt_mapper *mapper, QrtStatement *stmt),
             void (*onCell)(struct qrt_mapper *mapper, QrtCell *cell)
         ){
     struct qrt_mapper *mapper;
@@ -217,7 +190,6 @@ QrtMapper *qrt_mapper_alloc(QrtCtx *ctx,
     bzero(mapper, sizeof(struct qrt_mapper));
     mapper->base.class = CLASS_UNDEFINED;
     mapper->onBlock = onBlock;
-    mapper->onStmt = onStmt;
     mapper->onCell = onCell;
     mapper->space = ctl_counted_from_cstr("                    ");
     mapper->space->length = 0;
