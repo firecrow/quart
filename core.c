@@ -23,8 +23,8 @@ typedef struct qrt_block {
 typedef struct qrt_ctx {
     struct base base;
     CtlCounted *shelf;
-    QrtBlock *block;
     QrtCell *start; 
+    QrtBlock *block;
     Crray *stack;
     CtlAbs *reg;
     int indent;
