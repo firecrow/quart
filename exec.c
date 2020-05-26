@@ -1,3 +1,10 @@
+QrtCell *break_chain_cell(QrtCell *cell){
+    QrtCell *next;
+    if(!cell) return NULL;
+    next = cell->next;
+    cell->next = NULL;
+    return next;
+}
 
 CtlAbs *fetch_value(CtlTree *namespace, CtlAbs *value){
     CtlAbs *new;
@@ -14,7 +21,7 @@ QrtCell *exec_cell(QrtBlock *block, QrtCell *actor, QrtCell *args){
     print_cell(actor);
 
     QrtSymbol *symbol;
-    QrtBlock *vblock;
+    QrtBlock *vblock, *closeb;
     CtlInt *qnumber;
     QrtOpp *opp;
 
@@ -29,6 +36,17 @@ QrtCell *exec_cell(QrtBlock *block, QrtCell *actor, QrtCell *args){
     }
     if((vblock = asQrtBlock(value))){
         printf("block---------%s\n", get_node_value_str(value));
+        if(vblock->type == '{'){
+            vblock->cell = args;
+            while(args){
+                closeb = asQrtBlock(args->value);
+                if(closeb && closeb->type == '}'){
+                    break;
+                }
+                args = args->next;
+            }
+            args = break_chain_cell(args);
+        }
     }
     if((qnumber = asCtlInt(value))){
         printf("int---------%s\n", get_node_value_str(value));
