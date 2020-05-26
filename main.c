@@ -31,8 +31,8 @@ int main(){
     char *z = ":javalin 0, :run { write x, write 2*4*y, &javalin y} :juliet 7 + 2 + 4, run :x 2 :y 3";
     char *x = ":x 3 :y 3; :z * x y\n :out {\nwrite h\nwrite j \n} out :h 10\n:min {\n .x 10 :z 0 if { x < z } then {x} else {z}\n} min :z 5; min :z 17\n &x 5 &y 10";
 
+    run(":run {+ x 12}; run :x 3\nrun :x 10");
 
-    /* basic arithmetic and variables */
     /*
     run("* 5 7");
     run("* 5 7 12"); 
@@ -40,17 +40,10 @@ int main(){
     run("- 10 5"); 
     run(":x 10\n+ x 13"); 
     run(":y 8\n&y 10\n- 25 y");
-    */
-    /* function literals and pointers*/
-    /*
     run("{+ 10 x} :x 3\n");
     run("{+ 10 x} :x 3\n- 10 20");
-    */
-    run(":run {+ x 12}; run :x 3\nrun :x 10");
-    /*
     run(":run {* :x :y }\nrun :x 1 :y 2\n:ptr run\nptr :x 100 :h 3");
     */
-    /* lexical scoped symbols*/
 
     return 0;
 }

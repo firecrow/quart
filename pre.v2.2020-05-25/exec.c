@@ -93,17 +93,16 @@ QrtCell *call(QrtCtx *ctx, QrtBlock *block, QrtCell *actor, QrtCell *args){
 
         printf("3\n");
         if(symbol->type == ':' || symbol->type == '&'){
-            printf("in assign\n");
             symbol->value = value;
             symbol->name->length--;
             symbol->name->data++;
+            printf("inserting '%s'\n", ctl_to_cstr(symbol->name));
             ctl_tree_insert(block->namespace, (CtlAbs *)symbol->name, symbol->value);
             if(nblock){
                 printf("block here %c/%c\n", block->type, symbol->type);
                 if(nblock->type == '{'){
-                    printf("assigning a block cell to a symbol------------------------------------------>\n");
                     nblock->type = 'x';
-                    nblock->cell = args;
+                    nblock->cell = args->next;
                     while(args){
                         if((nblock = asQrtBlock(args->value)) && nblock->type == '}'){
                             break;
@@ -114,14 +113,13 @@ QrtCell *call(QrtCtx *ctx, QrtBlock *block, QrtCell *actor, QrtCell *args){
                 }
             }
         }else {
-            printf("out of assign\n");
-            printf("not a definition\n");
+            /*
             nblock = asQrtBlock(value);
-            printf("%c/%c\n", symbol->type, nblock->type);
             if(nblock && symbol->type == 'x' && nblock->type == 'x'){ 
-                printf("retrieving a block cell to a symbol------------------------------------------<\n");
-                printf("block running \n");
+                printf("00000000000000000000000");print_cell(nblock->cell);
+                return nblock->cell;
             }
+            */
         }
         ctx->reg = value;
         return args->next;
@@ -139,6 +137,7 @@ void exec_cells(QrtCtx *ctx, QrtBlock *block, QrtCell *cell){
         if(asCtlInt(ctx->reg)) value  = asCtlInt(ctx->reg)->value;
         else value = 0;
         print_indent(ctx->indent);printf("> reg:%d\n", value);
+        print_block(block);
         /*
         if(cell == NULL && ctx->stack->length){
             nblock = asQrtBlock(ctl_crray_pop(ctx->stack, -1));
