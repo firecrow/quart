@@ -139,14 +139,14 @@ QrtBlock *ctl_block_decr(QrtBlock *block){
 }
 
 QrtSymbol *asQrtSymbol(CtlAbs *x){
-    if(x && x->base.class != CLASS_SYMBOL){
+    if(!x || x->base.class != CLASS_SYMBOL){
         return NULL;
     }
     return (QrtSymbol *)x; 
 }
 
 QrtCell *asQrtCell(CtlAbs *x){
-    if(x && x->base.class != CLASS_CELL){
+    if(!x || x->base.class != CLASS_CELL){
         return NULL;
     }
     return (QrtCell *)x; 
