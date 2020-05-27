@@ -13,14 +13,14 @@
 #include "core.c"
 #include "utils.c"
 #include "debug.c"
-#include "exec.c"
+#include "build.c"
 #include "behavior.c"
 #include "parse.c"
 
 int run(char *source){
     printf("---------------------------------------------------->\n%s\n", source);
     QrtCtx *ctx = parse(source);
-    exec(ctx);
+    build(ctx);
     return 0;
 }
 

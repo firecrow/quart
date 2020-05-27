@@ -40,7 +40,7 @@ void push_block(QrtCtx *ctx, QrtBlock *block){
     }
 }
 
-QrtCell *exec_cell(QrtCtx *ctx, QrtCell *actor, QrtCell *args){
+QrtCell *build_cell(QrtCtx *ctx, QrtCell *actor, QrtCell *args){
     /*print_indent(ctx->indent);*/
     print_cell(actor);
 
@@ -103,12 +103,12 @@ QrtCell *exec_cell(QrtCtx *ctx, QrtCell *actor, QrtCell *args){
     return args;
 }
 
-void exec(QrtCtx *ctx){
+void build(QrtCtx *ctx){
     QrtCell *cell = ctx->start;
     if(!ctx->block) ctx->block = qrt_block_alloc('{', NULL);
     QrtBlock *block = ctx->block; 
     while(cell){
-        cell = exec_cell(ctx, cell, cell->next);
+        cell = build_cell(ctx, cell, cell->next);
         if(cell == NULL && ctx->block->resume){
             cell = ctx->block->resume;
             ctx->block->resume = NULL;
