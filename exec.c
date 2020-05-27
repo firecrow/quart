@@ -14,17 +14,18 @@ CtlAbs *fetch_value(QrtBlock *block, CtlAbs *value){
     if((symbol = asQrtSymbol(value))){
         while(block){
             printf(".");
+            print_block(block);
             new = ctl_tree_get(block->namespace, (CtlAbs *)symbol->name);
             if(new)
                 return new;
             block = block->parent;
         }
+        printf("ERROR: Value not found '%s'\n", ctl_to_cstr(symbol->name));
     }
     return value;
 }
 
 CtlAbs *put_value(QrtBlock *block, QrtSymbol *symbol, CtlAbs *value){
-    printf("put value-");
     CtlCounted *name = symbol->name;
     char c = name->data[0];
     if(c == ':' || c == '.' || c == '&'){
@@ -76,10 +77,11 @@ QrtCell *exec_cell(QrtCtx *ctx, QrtCell *actor, QrtCell *args){
         if(symbol->type == 'x'){
             printf("\x1b[31min x\n\x1b[0m");
             CtlAbs *symbol_value = fetch_value(block, (CtlAbs *)symbol);
-            print_value(symbol_value);
+            print_block(block);
             if((ablock = asQrtBlock(symbol_value))){
                 printf("\x1b[31min ablock\n\x1b[0m");
-                printf("setting islive\n");
+                printf("\x1b[32msetting islive\n\x1b[0m");
+                print_block(ablock);
                 ablock->is_live = 1;
                 push_block(ctx, ablock);
                 ctx->indent += 4;
@@ -121,9 +123,14 @@ void exec(QrtCtx *ctx){
         if(cell == NULL && ctx->block->resume){
             cell = ctx->block->resume;
             ctx->block->resume = NULL;
+            ctx->block = ctx->block->parent;
         }
     }
-    print_block(block);
+    block = ctx->block;
+    while(block){
+        print_block(block);
+        block = block->parent;
+    }
 }
 
 
