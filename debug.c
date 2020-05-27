@@ -1,3 +1,4 @@
+/* Copyright 2020 Firecrow Silvernight (fire@firecrow.com) licensed under the MIT License see LICENSE file */
 char *get_node_value_str(CtlAbs *value){
     char *node_value = "";
     if(value->base.class == CLASS_BLOCK){
