@@ -63,6 +63,8 @@ QrtCell *build_cell(QrtCtx *ctx, QrtCell *actor, QrtCell *args){
     CtlInt *qnumber;
     QrtOpp *opp;
 
+    print_indent(ctx->indent);print_block(block);
+
     CtlAbs *value = fetch_or_set_value(block, actor->value, args);
     if((sep = asQrtSep(value))){
         if(ctx->block && ctx->block->is_live){
@@ -75,16 +77,18 @@ QrtCell *build_cell(QrtCtx *ctx, QrtCell *actor, QrtCell *args){
         return NULL;
     }
     if((vblock = asQrtBlock(value))){
+        print_block(vblock);
         if(vblock->type == '{'){
             vblock->branch = args->next;
             push_block(ctx, vblock);
             ctx->indent += 4;
         }else if(vblock->type == '}'){
+            block = ctx->block;
             vblock = pop_block(ctx);
-            ctx->indent -= 4;
-            if(vblock && vblock->parent_cell){
+            if(block && block->parent_cell){
                 break_chain_cell(actor);
-                args = vblock->parent_cell->next;
+                args = block->parent_cell->next;
+                ctx->indent -= 4;
             }
         }else{
 
