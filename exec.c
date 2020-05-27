@@ -41,7 +41,8 @@ void push_block(QrtCtx *ctx, QrtBlock *block){
 }
 
 QrtCell *exec_cell(QrtCtx *ctx, QrtCell *actor, QrtCell *args){
-    print_indent(ctx->indent);print_cell(actor);
+    /*print_indent(ctx->indent);*/
+    print_cell(actor);
 
     QrtSymbol *symbol;
     QrtSep *sep;
@@ -54,6 +55,7 @@ QrtCell *exec_cell(QrtCtx *ctx, QrtCell *actor, QrtCell *args){
     if((sep = asQrtSep(value))){
         printf("sep---------%s\n", get_node_value_str(value));
         if(ctx->block && ctx->block->is_live){
+            ctx->block->is_live = 0;
             block->resume = args;
             ctx->indent -= 4;
             return ctx->block->cell;
@@ -111,8 +113,13 @@ QrtCell *exec_cell(QrtCtx *ctx, QrtCell *actor, QrtCell *args){
 void exec(QrtCtx *ctx){
     QrtCell *cell = ctx->start;
     if(!ctx->block) ctx->block = qrt_block_alloc('{', NULL);
-    QrtBlock *block = ctx->block; while(cell){
+    QrtBlock *block = ctx->block; 
+    while(cell){
         cell = exec_cell(ctx, cell, cell->next);
+        if(cell == NULL && ctx->block->resume){
+            cell = ctx->block->resume;
+            ctx->block->resume = NULL;
+        }
     }
     print_block(block);
 }
