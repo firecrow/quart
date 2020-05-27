@@ -24,12 +24,10 @@ char *get_node_value_str(CtlAbs *value){
 
 void print_block(QrtBlock *block){
     char *node_value = ctl_counted_to_cstr(ctl_counted_format("%c", block->type));
-    int next_id = block->next != NULL ? block->next->base.id  : -1;
     int prev_id = block->parent != NULL ? block->parent->base.id  : -1;
-    int branch_id = block->branch != NULL ? block->branch->base.id  : -1;
 
-    printf("|%s %c id:%d p:%d n:%d branch:%d|\n",
-        block->type == '{' ? "BLOCK" : "BCELL", block->type, block->base.id, prev_id, next_id, branch_id 
+    printf("|%s %c id:%d p:%d|\n",
+        block->type == '{' ? "BLOCK" : "BCELL", block->type, block->base.id, prev_id 
     );
 
     CtlTreeIter *iter = ctl_tree_iter(block->namespace);
@@ -43,6 +41,13 @@ void print_block(QrtBlock *block){
 }
 void print_indent(int i){
     while(i--){ printf(" ");}
+}
+
+void print_value(CtlAbs *value){
+    if(!value){
+        printf("[\x1b[33mNULL\x1b[0m]\n");
+    }
+    printf("[%s \x1b[33m%s\x1b[0m]\n", get_class_str(value), get_node_value_str(value));
 }
 
 void print_cell(QrtCell *cell){

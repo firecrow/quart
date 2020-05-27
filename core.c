@@ -11,12 +11,11 @@ typedef struct qrt_cell {
 typedef struct qrt_block {
     struct base base;
     struct qrt_block *parent;
-    struct qrt_block *next;
-    struct qrt_block *branch;
     CtlTree *namespace;
     QrtCell *cell;
     QrtCell *resume;
     CtlAbs *reg;
+    int is_live;
     char type;
 } QrtBlock;
 
