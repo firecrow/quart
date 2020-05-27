@@ -1,3 +1,5 @@
+/* Copyright 2020 Firecrow Silvernight (fire@firecrow.com) licensed under the MIT License see LICENSE file */
+
 CtlAbs *math_call(QrtOpp *opp, QrtCell * args){
     char type = opp->opp_type;
 

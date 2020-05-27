@@ -1,3 +1,5 @@
+/* Copyright 2020 Firecrow Silvernight (fire@firecrow.com) licensed under the MIT License see LICENSE file */
+
 QrtCell *break_chain_cell(QrtCell *cell){
     QrtCell *next;
     if(!cell) return NULL;
