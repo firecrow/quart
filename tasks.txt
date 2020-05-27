@@ -1,0 +1,5 @@
+x get initial single leval, functions working
+
+- get cell design into function call stacks
+    block -> cells ---------------
+      |_____/-block -> cells----

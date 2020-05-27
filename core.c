@@ -2,18 +2,16 @@
 
 typedef struct qrt_cell {
     struct base base;
-    int status;
     CtlAbs *value;
     struct qrt_cell *next;
-    struct qrt_cell *prev;
 } QrtCell;
 
 typedef struct qrt_block {
     struct base base;
     struct qrt_block *parent;
     CtlTree *namespace;
-    QrtCell *cell;
-    QrtCell *resume;
+    QrtCell *parent_cell;
+    QrtCell *branch;
     CtlAbs *reg;
     int is_live;
     char type;
@@ -24,7 +22,6 @@ typedef struct qrt_ctx {
     CtlCounted *shelf;
     QrtCell *start; 
     QrtBlock *block;
-    Crray *stack;
     CtlAbs *reg;
     int indent;
 } QrtCtx;
@@ -36,7 +33,6 @@ struct qrt_ctx * qrt_ctx_alloc(){
     bzero(ctx, sizeof(struct qrt_ctx));
     ctx->base.class = CLASS_CTX;
     ctx->base.id = ++qrt_ctx_id;
-    ctx->stack = ctl_crray_alloc(16);
     return ctx;
 }
 
@@ -47,8 +43,19 @@ struct qrt_cell *qrt_cell_alloc(){
     bzero(node, sizeof(struct qrt_cell));
     node->base.class = CLASS_CELL;
     node->base.id = ++qrt_cell_id;
-    node->status = CTL_NOT_STARTED;
     return node;
+}
+
+int qrt_block_id = 0;
+QrtBlock *qrt_block_alloc(char type, QrtBlock *parent){
+    QrtBlock *block;
+    ctl_xptr(block = malloc(sizeof(QrtBlock)));
+    block->base.class = CLASS_BLOCK;
+    block->base.id =  ++qrt_block_id;
+    block->namespace = ctl_tree_alloc(ctl_tree_counted_cmp);
+    block->type = type;
+    block->parent = parent;
+    return block;
 }
 
 /* new */
@@ -117,17 +124,6 @@ QrtSymbol *qrt_symbol_alloc(QrtCell *parent, CtlCounted *name){
     }
     symbol->type = c;
     return symbol;
-}
-
-int qrt_block_id = 0;
-QrtBlock *qrt_block_alloc(char type, QrtBlock *parent){
-    QrtBlock *block;
-    ctl_xptr(block = malloc(sizeof(QrtBlock)));
-    block->base.class = CLASS_BLOCK;
-    block->base.id =  ++qrt_block_id;
-    block->namespace = ctl_tree_alloc(ctl_tree_counted_cmp);
-    block->type = type;
-    return block;
 }
 
 QrtBlock *ctl_block_incr(QrtBlock *block){

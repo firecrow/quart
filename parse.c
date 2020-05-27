@@ -60,7 +60,9 @@ QrtCell *make_token(struct qrt_ctx *ctx, CtlCounted *name, QrtCell *current){
         node->value = (CtlAbs *)opp;
 
     }else if(token_type == CLASS_BLOCK){
-        node->value = (CtlAbs *)qrt_block_alloc(name->data[0], NULL); 
+        QrtBlock *block = qrt_block_alloc(name->data[0], NULL); 
+        block->parent_cell = node;
+        node->value = (CtlAbs *)block;
     }else if(token_type == CLASS_INT){
         node->value = (CtlAbs *)ctl_int_alloc(atoi(ctl_counted_to_cstr(name)));
     }else if(token_type == CLASS_SEP){
@@ -76,7 +78,6 @@ QrtCell *make_token(struct qrt_ctx *ctx, CtlCounted *name, QrtCell *current){
         ctx->start = node;
     }else{
         current->next = node;
-        node->prev = current;
     }
 
     return node;
