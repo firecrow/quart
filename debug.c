@@ -53,5 +53,5 @@ void print_value(CtlAbs *value){
 
 void print_cell(QrtCell *cell){
     int next_id = cell->next ? cell->next->base.id : -1;
-    printf("<%s \x1b[33m%s\x1b[0m ->%d>\n", get_class_str(cell->value), get_node_value_str(cell->value), next_id);
+    printf("<%s %d \x1b[33m%s\x1b[0m ->%d>\n", get_class_str(cell->value), cell->value->base.id, get_node_value_str(cell->value), next_id);
 }

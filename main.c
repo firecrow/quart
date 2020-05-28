@@ -14,6 +14,7 @@
 #include "utils.c"
 #include "debug.c"
 #include "build.c"
+#include "exec.c"
 #include "behavior.c"
 #include "parse.c"
 
@@ -21,6 +22,8 @@ int run(char *source){
     printf("---------------------------------------------------->\n%s\n", source);
     QrtCtx *ctx = parse(source);
     build(ctx);
+    exec(ctx);
+    printf("---------------------------------------------------->\n%s\n", source);
     return 0;
 }
 
