@@ -4,7 +4,6 @@ QrtCell *exec_cell(QrtCtx *ctx, QrtCell *actor, QrtCell *args){
 }
 
 void exec(QrtCtx *ctx){
-    /*QrtCell *cell = asQrtBlock(ctx->start->next->value)->branch; */
     QrtCell *cell = ctx->start;   
     while(cell){
         cell = exec_cell(ctx, cell, cell->next);
