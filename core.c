@@ -6,6 +6,7 @@ typedef struct qrt_cell {
     struct qrt_cell *next;
 } QrtCell;
 
+struct qrt_opp;
 typedef struct qrt_block {
     struct base base;
     struct qrt_block *parent;
@@ -15,6 +16,7 @@ typedef struct qrt_block {
     CtlAbs *reg;
     int is_live;
     char type;
+    struct qrt_opp *func;
 } QrtBlock;
 
 typedef struct qrt_ctx {
