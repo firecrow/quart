@@ -1,5 +1,29 @@
 x get initial single leval, functions working
 
-- get cell design into function call stacks
+x get cell design into function call stacks
     block -> cells ---------------
       |_____/-block -> cells----
+
+x nested arithmetic
+- clean up build to match exec
+    - remove close cells from list
+    - remove value fetching
+- lexical scoped variable lookup 
+- functions
+    - function arguments seperator handling
+    - functons as symbol values 
+- logic operators 
+    - if
+        {x == nil}?{}:{}
+    - while 
+        {x < 10}...{}
+ 
+
+
+- strings
+- file system io
+- network io
+- arrays 
+- spawn 
+- traincar
+- memory management
