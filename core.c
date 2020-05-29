@@ -10,6 +10,7 @@ struct qrt_opp;
 typedef struct qrt_block {
     struct base base;
     struct qrt_block *parent;
+    struct qrt_block *next;
     CtlTree *namespace;
     QrtCell *parent_cell;
     QrtCell *branch;

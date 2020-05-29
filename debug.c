@@ -26,19 +26,15 @@ char *get_node_value_str(CtlAbs *value){
 void print_block(QrtBlock *block){
     char *node_value = ctl_counted_to_cstr(ctl_counted_format("%c", block->type));
     int prev_id = block->parent != NULL ? block->parent->base.id  : -1;
+    int next_id = block->next != NULL ? block->next->base.id  : -1;
 
     int r = 0;
     CtlInt *reg = asCtlInt(block->reg); 
     if(reg){
        r = reg->value; 
     }
-    /*
-    printf("|%s %c id:%d p:%d %d|\n",
-        block->type == '{' ? "BLOCK" : "BCELL", block->type, block->base.id, prev_id, r 
-    );
-    */
-    printf("\x1b[31m%c>> #%d(%d) %d\x1b[0m\n",
-        block->type, block->base.id, prev_id, r 
+    printf("\x1b[31m>>block %c id:%d p:%d n:%d r:%d\x1b[0m\n",
+         block->type, block->base.id, prev_id, next_id, r 
     );
 
     CtlTreeIter *iter = ctl_tree_iter(block->namespace);

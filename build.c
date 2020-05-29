@@ -8,40 +8,11 @@ QrtCell *break_chain_cell(QrtCell *cell){
     return next;
 }
 
-CtlAbs *put_value(QrtBlock *block, QrtSymbol *symbol, CtlAbs *value){
-    CtlCounted *name = symbol->name;
-    char c = name->data[0];
-    if(c == ':' || c == '.' || c == '&'){
-        name->data++;
-        name->length--;
-    }
-    ctl_tree_insert(block->namespace, (CtlAbs *)symbol->name, value);
-    return value;
-}
-
-CtlAbs *fetch_or_set_value(QrtBlock *block, CtlAbs *value, QrtCell *args){
-    CtlAbs *new = NULL;
-    QrtSymbol *symbol;
-    if((symbol = asQrtSymbol(value))){
-        if(symbol->type == ':' || symbol->type == '&'){
-            put_value(block, symbol, args->value);
-        }else{
-            while(block){
-                new = ctl_tree_get(block->namespace, (CtlAbs *)symbol->name);
-                if(new)
-                    return new;
-                block = block->parent;
-            }
-        }
-    }
-
-    return value;
-}
-
 void push_block(QrtCtx *ctx, QrtBlock *block){ 
     if(block != ctx->block){
         block->type = 'x';
         block->parent = ctx->block;
+        ctx->block->next = block;
         ctx->block = block;
     }
 }
@@ -54,8 +25,6 @@ QrtBlock *pop_block(QrtCtx *ctx){
 }
 
 QrtCell *build_cell(QrtCtx *ctx, QrtCell *actor, QrtCell *args){
-    /*print_indent(ctx->indent);print_cell(actor);*/
-
     QrtSymbol *symbol;
     QrtSep *sep;
     QrtBlock *block = ctx->block;
@@ -63,7 +32,7 @@ QrtCell *build_cell(QrtCtx *ctx, QrtCell *actor, QrtCell *args){
     CtlInt *qnumber;
     QrtOpp *opp;
 
-    CtlAbs *value = fetch_or_set_value(block, actor->value, args);
+    CtlAbs *value = actor->value;
     if((sep = asQrtSep(value))){
     }
     if(!args){
@@ -72,7 +41,6 @@ QrtCell *build_cell(QrtCtx *ctx, QrtCell *actor, QrtCell *args){
     if((vblock = asQrtBlock(value))){
         if(vblock->type == '{'){
             vblock->branch = break_chain_cell(actor);
-            /*printf("\x1b[33m branch of %d ", vblock->base.id);print_cell(vblock->branch);*/
             push_block(ctx, vblock);
             ctx->indent += 4;
         }else if(vblock->type == '}'){
@@ -89,12 +57,6 @@ QrtCell *build_cell(QrtCtx *ctx, QrtCell *actor, QrtCell *args){
         }
 
     }
-    /*
-    if((qnumber = asCtlInt(value))){
-    }
-    if((opp = asQrtOpp(value))){
-    }
-    */
     return args;
 }
 
@@ -104,25 +66,10 @@ void build(QrtCtx *ctx){
     if(!ctx->block) ctx->block = qrt_block_alloc('{', NULL);
     QrtBlock *block = ctx->block; 
     while(cell){
-        prior = cell;
         cell = build_cell(ctx, cell, cell->next);
-        /*
-        if(cell == NULL && ctx->block->parent_cell && ctx->block->parent_cell->next){
-            cell = ctx->block->parent_cell->next;
-            ctx->block->parent_cell->next = NULL;
-            ctx->block = ctx->block->parent;
-        }
-        */
-        while(prior && prior != cell){
-            /*print_indent(ctx->indent);printf("\x1b[36m");print_cell(prior);printf("\x1b[0m");*/
-            prior = prior->next;
-        }
-    }
-    block = ctx->block;
-    while(block){
-        block = block->parent;
     }
 }
+
 
 
 
