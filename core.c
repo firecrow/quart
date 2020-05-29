@@ -61,7 +61,6 @@ QrtBlock *qrt_block_alloc(char type, QrtBlock *parent){
     return block;
 }
 
-/* new */
 enum qrt_opp_types {
     QRT_PLUS = '+',
     QRT_MINUS = '-',
@@ -72,13 +71,10 @@ enum qrt_opp_types {
     QRT_NOT = '!'
 };
 
-
-
-/* may change to _func */
-struct qrt_opp;
 typedef struct qrt_opp {
     struct base base;
     char opp_type;
+    CtlAbs *value;
     CtlAbs *(*call)(QrtBlock *block, CtlAbs *value);
 } QrtOpp;
 
