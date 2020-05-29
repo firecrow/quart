@@ -9,7 +9,7 @@ CtlAbs *exec_cell(QrtCtx *ctx, QrtCell *cell){
         print_indent(ctx->indent);print_cell(cell); 
         print_indent(ctx->indent);print_block(ctx->block);
         value = cell->value;
-        if((block = asQrtBlock(cell->value))){
+        if((block = asQrtBlock(cell->value)) && block->type != '}'){
             ctx->block = block;
             ctx->indent += 2;
             value = exec_cell(ctx, block->branch);  

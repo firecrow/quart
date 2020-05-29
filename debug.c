@@ -32,8 +32,13 @@ void print_block(QrtBlock *block){
     if(reg){
        r = reg->value; 
     }
+    /*
     printf("|%s %c id:%d p:%d %d|\n",
         block->type == '{' ? "BLOCK" : "BCELL", block->type, block->base.id, prev_id, r 
+    );
+    */
+    printf("\x1b[31m%c>> #%d(%d) %d\x1b[0m\n",
+        block->type, block->base.id, prev_id, r 
     );
 
     CtlTreeIter *iter = ctl_tree_iter(block->namespace);

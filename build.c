@@ -74,10 +74,12 @@ QrtCell *build_cell(QrtCtx *ctx, QrtCell *actor, QrtCell *args){
             vblock->branch = break_chain_cell(actor);
             /*printf("\x1b[33m branch of %d ", vblock->base.id);print_cell(vblock->branch);*/
             push_block(ctx, vblock);
+            printf("...");print_block(vblock);
             ctx->indent += 4;
         }else if(vblock->type == '}'){
             bblock = ctx->block; 
             pop_block(ctx);
+            printf("...");print_block(bblock);
             if(bblock && bblock->parent_cell){
                 args = break_chain_cell(actor);
                 bblock->parent_cell->next = args;
