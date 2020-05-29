@@ -16,7 +16,7 @@ typedef struct qrt_block {
     CtlAbs *reg;
     int is_live;
     char type;
-    struct qrt_opp *func;
+    struct qrt_opp *opp;
 } QrtBlock;
 
 typedef struct qrt_ctx {
@@ -78,6 +78,7 @@ struct qrt_opp;
 typedef struct qrt_opp {
     struct base base;
     char opp_type;
+    CtlAbs *(*call)(QrtBlock *block, CtlAbs *value);
 } QrtOpp;
 
 typedef struct qrt_symbol {

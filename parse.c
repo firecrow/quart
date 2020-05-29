@@ -58,7 +58,7 @@ QrtCell *make_token(struct qrt_ctx *ctx, CtlCounted *name, QrtCell *current){
     if(token_type == CLASS_OPP){
         QrtOpp *opp = qrt_opp_alloc(name->data[0]);
         node->value = (CtlAbs *)opp;
-
+        opp->call = math_call;
     }else if(token_type == CLASS_BLOCK){
         QrtBlock *block = qrt_block_alloc(name->data[0], NULL); 
         block->parent_cell = node;
