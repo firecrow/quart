@@ -12,7 +12,6 @@ void push_block(QrtCtx *ctx, QrtBlock *block){
     if(block != ctx->block){
         block->type = 'x';
         block->parent = ctx->block;
-        ctx->block->next = block;
         ctx->block = block;
     }
 }

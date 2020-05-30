@@ -1,11 +1,22 @@
-QrtBlock *split_block(QrtCtx *ctx){
-    QrtBlock *block = qrt_block_alloc('x', ctx->block); 
-    block->parent = ctx->block;
-    block->next = ctx->block->next;
-    ctx->block->next->parent = block;
-    ctx->block->next = block;
-    ctx->block = block;
-    return block;
+QrtOpp *push_opp(QrtBlock *block, QrtOpp *opp){
+    if(block->opp){
+        opp->parent = block->opp;
+        opp->parent->next = opp;
+    }
+    return block->opp = opp;
+}
+
+QrtOpp *pop_opp(QrtBlock *block){
+    QrtOpp *opp = block->opp;
+    if(opp->parent){
+        opp->parent->next = opp->next;
+    }
+    if(opp->next){
+        opp->next->parent = opp->parent;
+    }
+    opp->next = opp->parent = NULL;
+    block->opp = opp->parent;
+    return opp;
 }
 
 CtlAbs *exec_cell(QrtCtx *ctx, QrtCell *cell){
@@ -22,10 +33,11 @@ CtlAbs *exec_cell(QrtCtx *ctx, QrtCell *cell){
         print_indent(ctx->indent);print_block(ctx->block);
         value = cell->value;
         if((symbol = asQrtSymbol(cell->value))){
-            block = split_block(ctx);
-            block->opp = opp_assign(symbol);
-            value = exec_cell(ctx, block->next);  
-            ctx->block = ctx->block->parent;
+            if(symbol->type == 'x'){
+                /* value = fetch value */
+            }else{
+                opp = push_opp(block, opp_assign(symbol));
+            }
         }
         if((block = asQrtBlock(cell->value))){
             if(block->type == '}'){
@@ -39,12 +51,12 @@ CtlAbs *exec_cell(QrtCtx *ctx, QrtCell *cell){
                 ctx->indent -= 2;
                 ctx->block = ctx->block->parent;
             }
-        if((opp = asQrtOpp(cell->value))){
-            ctx->block->opp = opp;
         }
-        if(!opp && ctx->block->opp){
-            printf("sending to opp...\n");
-            value = ctx->block->opp->call(ctx->block, value);
+        if((opp = asQrtOpp(cell->value))){
+            opp = push_opp(block, opp);
+        }
+        if(!opp && ctx->opp){
+            value = ctx->block->opp->call(ctx, value);
         }
         if((intvalue = asCtlInt(value))){
             if(ctx->block->reg == NULL){

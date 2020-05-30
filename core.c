@@ -10,22 +10,40 @@ struct qrt_opp;
 typedef struct qrt_block {
     struct base base;
     struct qrt_block *parent;
-    struct qrt_block *next;
     CtlTree *namespace;
     QrtCell *parent_cell;
     QrtCell *branch;
-    CtlAbs *reg;
     int is_live;
     char type;
+    CtlAbs *reg;
+    QrtOpp *opp;
     struct qrt_opp *opp;
 } QrtBlock;
+
+enum qrt_opp_types {
+    QRT_PLUS = '+',
+    QRT_MINUS = '-',
+    QRT_DIVIDE = '/',
+    QRT_MULTIPLY = '*',
+    QRT_GREATER = '>',
+    QRT_LESS = '<',
+    QRT_NOT = '!'
+};
+
+typedef struct qrt_opp {
+    struct base base;
+    qrt_opp *parent;
+    qrt_opp *next;
+    char opp_type;
+    CtlAbs *value;
+    CtlAbs *(*call)(QrtCtx *ctx, CtlAbs *value);
+} QrtOpp;
 
 typedef struct qrt_ctx {
     struct base base;
     CtlCounted *shelf;
     QrtCell *start; 
     QrtBlock *block;
-    CtlAbs *reg;
     int indent;
 } QrtCtx;
 
@@ -60,23 +78,6 @@ QrtBlock *qrt_block_alloc(char type, QrtBlock *parent){
     block->parent = parent;
     return block;
 }
-
-enum qrt_opp_types {
-    QRT_PLUS = '+',
-    QRT_MINUS = '-',
-    QRT_DIVIDE = '/',
-    QRT_MULTIPLY = '*',
-    QRT_GREATER = '>',
-    QRT_LESS = '<',
-    QRT_NOT = '!'
-};
-
-typedef struct qrt_opp {
-    struct base base;
-    char opp_type;
-    CtlAbs *value;
-    CtlAbs *(*call)(QrtBlock *block, CtlAbs *value);
-} QrtOpp;
 
 typedef struct qrt_symbol {
    struct base base;

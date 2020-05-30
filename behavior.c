@@ -4,9 +4,9 @@ CtlAbs *math_call(QrtBlock *block, CtlAbs *value){
     print_value(value);
     QrtOpp *opp = block->opp;
     if(!asCtlInt(value)){
+        pop_opp(block);
         return value;
     }
-
 
     int regval = block->reg != NULL ? asCtlInt(block->reg)->value : -1;
     printf("\x1b[36m%d %c %d\x1b[0m\n", regval, opp->opp_type, asCtlInt(value)->value); 
@@ -35,7 +35,7 @@ CtlAbs *opp_assign_call(QrtBlock *block, CtlAbs *value){
         }
     }
     ctl_tree_insert(block->namespace, symbol->name, value);
-    block->opp = NULL;
+    pop_opp(block);
     return value;
 }
 
