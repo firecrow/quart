@@ -55,7 +55,7 @@ CtlAbs *exec_cell(QrtCtx *ctx, QrtCell *cell){
             }
         }
         if((opp = asQrtOpp(cell->value))){
-            opp = push_opp(block, opp);
+            opp = push_opp(ctx->block, opp);
         }
         if(!opp && ctx->block->opp){
             value = ctx->block->opp->call(ctx->block, value);
