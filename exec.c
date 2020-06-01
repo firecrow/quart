@@ -24,13 +24,13 @@ QrtOpp *pop_opp(QrtBlock *block){
 
 CtlAbs *exec_value(QrtCtx *ctx, CtlAbs *value){
     QrtBlock *block;
-    QrtOpp *opp;
+    QrtOpp *opp = NULL;
     QrtSep *sep;
     QrtSymbol *symbol;
     CtlInt *intvalue;
     print_indent(ctx->indent);print_block(ctx->block);
-    if((opp = asQrtOpp(value))){
-        opp = push_opp(ctx->block, opp);
+    if(asQrtOpp(value)){
+        opp = push_opp(ctx->block, asQrtOpp(value));
     }
     if((symbol = asQrtSymbol(value))){
         if(symbol->type == 'x'){

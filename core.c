@@ -156,14 +156,14 @@ QrtBlock *asQrtBlock(CtlAbs *x){
 }
 
 QrtOpp *asQrtOpp(CtlAbs *x){
-    if(x && x->base.class != CLASS_OPP){
+    if(!x || x->base.class != CLASS_OPP){
         return NULL;
     }
     return (QrtOpp *)x; 
 }
 
 QrtSep *asQrtSep(CtlAbs *x){
-    if(x && x->base.class != CLASS_SEP){
+    if(!x || x->base.class != CLASS_SEP){
         return NULL;
     }
     return (QrtSep *)x; 
