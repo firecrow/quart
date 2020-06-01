@@ -1,6 +1,7 @@
 /* Copyright 2020 Firecrow Silvernight (fire@firecrow.com) licensed under the MIT License see LICENSE file */
 
-CtlAbs *math_call(QrtBlock *block, CtlAbs *value){
+CtlAbs *math_call(QrtCtx *ctx, CtlAbs *value){
+    QrtBlock *block = ctx->block;
     print_value(value);
     QrtOpp *opp = block->opp;
     if(!asCtlInt(value)){
@@ -27,7 +28,9 @@ CtlAbs *math_call(QrtBlock *block, CtlAbs *value){
     return block->reg;
 }
 
-CtlAbs *opp_assign_call(QrtBlock *block, CtlAbs *value){
+CtlAbs *opp_assign_call(QrtCtx *ctx, CtlAbs *value){
+    printf("opp_assign_call\n");
+    QrtBlock *block = ctx->block;
     printf("assign................\n");
     QrtSymbol *symbol;
     if((symbol = asQrtSymbol(block->opp->value))){
@@ -38,7 +41,7 @@ CtlAbs *opp_assign_call(QrtBlock *block, CtlAbs *value){
     }
     ctl_tree_insert(block->namespace, (CtlAbs *)symbol->name, value);
     pop_opp(block);
-    return value;
+    return exec_value(ctx, value);
 }
 
 QrtOpp *opp_assign(QrtSymbol *symbol){

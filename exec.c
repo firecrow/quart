@@ -1,4 +1,5 @@
 QrtOpp *opp_assign(QrtSymbol *symbol);
+CtlAbs *exec_cell(QrtCtx *ctx, QrtCell *cell);
 
 QrtOpp *push_opp(QrtBlock *block, QrtOpp *opp){
     printf("push-------------\n");
@@ -24,13 +25,17 @@ QrtOpp *pop_opp(QrtBlock *block){
 }
 
 CtlAbs *exec_value(QrtCtx *ctx, CtlAbs *value){
+    printf("\x1b[31m");print_value(value);
     QrtBlock *block;
     QrtOpp *opp;
     QrtSep *sep;
     QrtSymbol *symbol;
     CtlInt *intvalue;
-    CtlAbs *newvalue;
     print_indent(ctx->indent);print_block(ctx->block);
+    if((opp = asQrtOpp(value))){
+        printf("it's an opp :%c\n", opp->opp_type);
+        opp = push_opp(ctx->block, opp);
+    }
     if((symbol = asQrtSymbol(value))){
         if(symbol->type == 'x'){
             /* value = fetch value */
@@ -40,8 +45,7 @@ CtlAbs *exec_value(QrtCtx *ctx, CtlAbs *value){
     }
     if((block = asQrtBlock(value))){
         if(block->type == '}'){
-            cell = cell->next;
-            continue;
+            return NULL;
         }else{
             ctx->block = block;
             ctx->indent += 2;
@@ -51,15 +55,9 @@ CtlAbs *exec_value(QrtCtx *ctx, CtlAbs *value){
             ctx->block = ctx->block->parent;
         }
     }
-    if((opp = asQrtOpp(value))){
-        printf("it's an opp :%c\n", opp->opp_type);
-        opp = push_opp(ctx->block, opp);
-    }
     if(!opp && ctx->block->opp){
         printf("it's not an opp run it :%c\n", ctx->block->opp->opp_type);
-        newvalue = ctx->block->opp->call(ctx->block, value);
-        if(newvalue != value)
-          value = exec_value(ctx, newvalue);
+        value = ctx->block->opp->call(ctx, value);
     }
     if((intvalue = asCtlInt(value))){
         if(ctx->block->reg == NULL){
@@ -79,7 +77,7 @@ CtlAbs *exec_cell(QrtCtx *ctx, QrtCell *cell){
 
     while(cell->next){
         print_indent(ctx->indent);print_cell(cell); 
-        value = exec_value(cell->value);
+        value = exec_value(ctx, cell->value);
         cell = cell->next;
     }
     return value;

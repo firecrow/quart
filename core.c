@@ -43,7 +43,7 @@ typedef struct qrt_opp {
     struct qrt_opp *next;
     char opp_type;
     CtlAbs *value;
-    CtlAbs *(*call)(QrtBlock *block, CtlAbs *value);
+    CtlAbs *(*call)(QrtCtx *ctx, CtlAbs *value);
 } QrtOpp;
 
 int qrt_ctx_id = 0;
