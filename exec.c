@@ -25,7 +25,7 @@ QrtOpp *pop_opp(QrtBlock *block){
 }
 
 CtlAbs *exec_value(QrtCtx *ctx, CtlAbs *value){
-    printf("\x1b[31m");print_value(value);
+    printf("\x1b[31m exec_value:");print_value(value);
     QrtBlock *block;
     QrtOpp *opp;
     QrtSep *sep;

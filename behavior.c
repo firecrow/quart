@@ -1,6 +1,7 @@
 /* Copyright 2020 Firecrow Silvernight (fire@firecrow.com) licensed under the MIT License see LICENSE file */
 
 CtlAbs *math_call(QrtCtx *ctx, CtlAbs *value){
+    printf("\x1b[35mmath_call:"); print_value(value);
     QrtBlock *block = ctx->block;
     print_value(value);
     QrtOpp *opp = block->opp;
