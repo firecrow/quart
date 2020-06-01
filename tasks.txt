@@ -6,9 +6,11 @@ x get cell design into function call stacks
 
 x nested arithmetic
 - clean up build to match exec
-    - remove close cells from list
-    - remove value fetching
+>   - remove close cells from list
+    x remove value fetching
 - lexical scoped variable lookup 
+    x variables inluded in broader statements (math for now)
+    - lookup properly across blocks
 - functions
     - function arguments seperator handling
     - functons as symbol values 
@@ -20,6 +22,7 @@ x nested arithmetic
  
 
 
+[library]
 - strings
 - file system io
 - network io
