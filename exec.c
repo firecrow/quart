@@ -38,7 +38,10 @@ CtlAbs *exec_value(QrtCtx *ctx, CtlAbs *value){
     }
     if((symbol = asQrtSymbol(value))){
         if(symbol->type == 'x'){
-            /* value = fetch value */
+            value = ctl_tree_get(ctx->block->namespace, (CtlAbs *)symbol->name);
+            if(!value){
+                ctl_xerrlog("value not found");
+            }
         }else{
             opp = push_opp(ctx->block, opp_assign(symbol));
         }

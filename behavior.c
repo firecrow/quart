@@ -38,9 +38,14 @@ CtlAbs *opp_assign_call(QrtCtx *ctx, CtlAbs *value){
         if(symbol->name->data[0] == ':' || symbol->name->data[0] == '&'){
             symbol->name->data++;
             symbol->name->length--;
+            ctl_tree_insert(block->namespace, (CtlAbs *)symbol->name, value);
+        }else{
+            value = ctl_tree_get(block->namespace, (CtlAbs *)symbol->name);
+            if(!value){
+                ctl_xerrlog("value not found");
+            }
         }
     }
-    ctl_tree_insert(block->namespace, (CtlAbs *)symbol->name, value);
     pop_opp(block);
     return exec_value(ctx, value);
 }
