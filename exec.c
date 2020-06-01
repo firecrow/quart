@@ -1,3 +1,5 @@
+QrtOpp *opp_assign(QrtSymbol *symbol);
+
 QrtOpp *push_opp(QrtBlock *block, QrtOpp *opp){
     if(block->opp){
         opp->parent = block->opp;
@@ -55,8 +57,8 @@ CtlAbs *exec_cell(QrtCtx *ctx, QrtCell *cell){
         if((opp = asQrtOpp(cell->value))){
             opp = push_opp(block, opp);
         }
-        if(!opp && ctx->opp){
-            value = ctx->block->opp->call(ctx, value);
+        if(!opp && ctx->block->opp){
+            value = ctx->block->opp->call(ctx->block, value);
         }
         if((intvalue = asCtlInt(value))){
             if(ctx->block->reg == NULL){

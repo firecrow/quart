@@ -16,7 +16,6 @@ typedef struct qrt_block {
     int is_live;
     char type;
     CtlAbs *reg;
-    QrtOpp *opp;
     struct qrt_opp *opp;
 } QrtBlock;
 
@@ -30,15 +29,6 @@ enum qrt_opp_types {
     QRT_NOT = '!'
 };
 
-typedef struct qrt_opp {
-    struct base base;
-    qrt_opp *parent;
-    qrt_opp *next;
-    char opp_type;
-    CtlAbs *value;
-    CtlAbs *(*call)(QrtCtx *ctx, CtlAbs *value);
-} QrtOpp;
-
 typedef struct qrt_ctx {
     struct base base;
     CtlCounted *shelf;
@@ -46,6 +36,15 @@ typedef struct qrt_ctx {
     QrtBlock *block;
     int indent;
 } QrtCtx;
+
+typedef struct qrt_opp {
+    struct base base;
+    struct qrt_opp *parent;
+    struct qrt_opp *next;
+    char opp_type;
+    CtlAbs *value;
+    CtlAbs *(*call)(QrtBlock *block, CtlAbs *value);
+} QrtOpp;
 
 int qrt_ctx_id = 0;
 struct qrt_ctx * qrt_ctx_alloc(){

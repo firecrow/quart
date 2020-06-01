@@ -28,20 +28,21 @@ CtlAbs *math_call(QrtBlock *block, CtlAbs *value){
 }
 
 CtlAbs *opp_assign_call(QrtBlock *block, CtlAbs *value){
-    if(symbol = asQrtSymbol(block->opp->value)){
+    QrtSymbol *symbol;
+    if((symbol = asQrtSymbol(block->opp->value))){
         if(symbol->name->data[0] == ':' || symbol->name->data[0] == '&'){
             symbol->name->data++;
             symbol->name->length--;
         }
     }
-    ctl_tree_insert(block->namespace, symbol->name, value);
+    ctl_tree_insert(block->namespace, (CtlAbs *)symbol->name, value);
     pop_opp(block);
     return value;
 }
 
 QrtOpp *opp_assign(QrtSymbol *symbol){
-    QrtOpp *opp = qrt_opp_alloc(); 
-    opp->value = symbol;
+    QrtOpp *opp = qrt_opp_alloc(':'); 
+    opp->value = (CtlAbs *)symbol;
     opp->call = opp_assign_call;
     return opp;
 }
