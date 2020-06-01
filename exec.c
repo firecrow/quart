@@ -19,8 +19,8 @@ QrtOpp *pop_opp(QrtBlock *block){
     if(opp->next){
         opp->next->parent = opp->parent;
     }
-    opp->next = opp->parent = NULL;
     block->opp = opp->parent;
+    opp->next = opp->parent = NULL;
     return opp;
 }
 
