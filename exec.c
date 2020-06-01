@@ -29,6 +29,9 @@ CtlAbs *exec_value(QrtCtx *ctx, CtlAbs *value){
     QrtSymbol *symbol;
     CtlInt *intvalue;
     print_indent(ctx->indent);print_block(ctx->block);
+    if((opp = asQrtOpp(value))){
+        opp = push_opp(ctx->block, opp);
+    }
     if((symbol = asQrtSymbol(value))){
         if(symbol->type == 'x'){
             value = ctl_tree_get(ctx->block->namespace, (CtlAbs *)symbol->name);
@@ -49,9 +52,6 @@ CtlAbs *exec_value(QrtCtx *ctx, CtlAbs *value){
             ctx->indent -= 2;
             ctx->block = ctx->block->parent;
         }
-    }
-    if((asQrtOpp(value))){
-        opp = push_opp(ctx->block, asQrtOpp(value));
     }
     if(!opp && ctx->block->opp){
         value = ctx->block->opp->call(ctx, value);
