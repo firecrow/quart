@@ -38,7 +38,7 @@ CtlAbs *exec_cell(QrtCtx *ctx, QrtCell *cell){
             if(symbol->type == 'x'){
                 /* value = fetch value */
             }else{
-                opp = push_opp(block, opp_assign(symbol));
+                opp = push_opp(ctx->block, opp_assign(symbol));
             }
         }
         if((block = asQrtBlock(cell->value))){

@@ -35,7 +35,10 @@ int main(){
     char *x = ":x 3 :y 3; :z * x y\n :out {\nwrite h\nwrite j \n} out :h 10\n:min {\n .x 10 :z 0 if { x < z } then {x} else {z}\n} min :z 5; min :z 17\n &x 5 &y 10";
 
 
-    run("{+ 9 {* 6 {+ 2 5 7 {* 3 3} 1}}};");
+    run("{+ 9 :x 1;};");
+    /*
+    run("{+ 9 {* 6 {+ 2 5 7 {* 3 3} 1}}};"); 153
+    */
 
     /*
     run("{+ 9 {* 6 2} 34};");

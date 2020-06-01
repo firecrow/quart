@@ -8,7 +8,7 @@ CtlAbs *math_call(QrtBlock *block, CtlAbs *value){
         return value;
     }
 
-    int regval = block->reg != NULL ? asCtlInt(block->reg)->value : -1;
+    int regval = block->reg != NULL ? asCtlInt(block->reg)->value : -1000;
     printf("\x1b[36m%d %c %d\x1b[0m\n", regval, opp->opp_type, asCtlInt(value)->value); 
 
 
@@ -28,6 +28,7 @@ CtlAbs *math_call(QrtBlock *block, CtlAbs *value){
 }
 
 CtlAbs *opp_assign_call(QrtBlock *block, CtlAbs *value){
+    printf("assign................\n");
     QrtSymbol *symbol;
     if((symbol = asQrtSymbol(block->opp->value))){
         if(symbol->name->data[0] == ':' || symbol->name->data[0] == '&'){
