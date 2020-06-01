@@ -1,6 +1,7 @@
 QrtOpp *opp_assign(QrtSymbol *symbol);
 
 QrtOpp *push_opp(QrtBlock *block, QrtOpp *opp){
+    printf("push-------------\n");
     if(block->opp){
         opp->parent = block->opp;
         opp->parent->next = opp;
@@ -9,6 +10,7 @@ QrtOpp *push_opp(QrtBlock *block, QrtOpp *opp){
 }
 
 QrtOpp *pop_opp(QrtBlock *block){
+    printf("pop-------------\n");
     QrtOpp *opp = block->opp;
     if(opp->parent){
         opp->parent->next = opp->next;
@@ -21,54 +23,63 @@ QrtOpp *pop_opp(QrtBlock *block){
     return opp;
 }
 
-CtlAbs *exec_cell(QrtCtx *ctx, QrtCell *cell){
-    if(!cell) return NULL;
+CtlAbs *exec_value(QrtCtx *ctx, CtlAbs *value){
     QrtBlock *block;
-    CtlAbs *value = NULL;
     QrtOpp *opp;
     QrtSep *sep;
     QrtSymbol *symbol;
     CtlInt *intvalue;
+    CtlAbs *newvalue;
+    print_indent(ctx->indent);print_block(ctx->block);
+    if((symbol = asQrtSymbol(value))){
+        if(symbol->type == 'x'){
+            /* value = fetch value */
+        }else{
+            opp = push_opp(ctx->block, opp_assign(symbol));
+        }
+    }
+    if((block = asQrtBlock(value))){
+        if(block->type == '}'){
+            cell = cell->next;
+            continue;
+        }else{
+            ctx->block = block;
+            ctx->indent += 2;
+            value = exec_cell(ctx, block->branch);  
+            printf("-----------: ");print_value(value);
+            ctx->indent -= 2;
+            ctx->block = ctx->block->parent;
+        }
+    }
+    if((opp = asQrtOpp(value))){
+        printf("it's an opp :%c\n", opp->opp_type);
+        opp = push_opp(ctx->block, opp);
+    }
+    if(!opp && ctx->block->opp){
+        printf("it's not an opp run it :%c\n", ctx->block->opp->opp_type);
+        newvalue = ctx->block->opp->call(ctx->block, value);
+        if(newvalue != value)
+          value = exec_value(ctx, newvalue);
+    }
+    if((intvalue = asCtlInt(value))){
+        if(ctx->block->reg == NULL){
+            ctx->block->reg = (CtlAbs *)intvalue;
+        }
+    }
+    if((sep = asQrtSep(value))){
+        ctx->block->reg = NULL;
+        ctx->block->opp = NULL;
+    }
+    return value;
+}
+
+CtlAbs *exec_cell(QrtCtx *ctx, QrtCell *cell){
+    if(!cell) return NULL;
+    CtlAbs *value = NULL;
 
     while(cell->next){
         print_indent(ctx->indent);print_cell(cell); 
-        print_indent(ctx->indent);print_block(ctx->block);
-        value = cell->value;
-        if((symbol = asQrtSymbol(cell->value))){
-            if(symbol->type == 'x'){
-                /* value = fetch value */
-            }else{
-                opp = push_opp(ctx->block, opp_assign(symbol));
-            }
-        }
-        if((block = asQrtBlock(cell->value))){
-            if(block->type == '}'){
-                cell = cell->next;
-                continue;
-            }else{
-                ctx->block = block;
-                ctx->indent += 2;
-                value = exec_cell(ctx, block->branch);  
-                printf("-----------: ");print_value(value);
-                ctx->indent -= 2;
-                ctx->block = ctx->block->parent;
-            }
-        }
-        if((opp = asQrtOpp(cell->value))){
-            opp = push_opp(ctx->block, opp);
-        }
-        if(!opp && ctx->block->opp){
-            value = ctx->block->opp->call(ctx->block, value);
-        }
-        if((intvalue = asCtlInt(value))){
-            if(ctx->block->reg == NULL){
-                ctx->block->reg = (CtlAbs *)intvalue;
-            }
-        }
-        if((sep = asQrtSep(cell->value))){
-            ctx->block->reg = NULL;
-            ctx->block->opp = NULL;
-        }
+        value = exec_value(cell->value);
         cell = cell->next;
     }
     return value;
