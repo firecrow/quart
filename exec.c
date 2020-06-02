@@ -1,3 +1,5 @@
+/* Copyright 2020 Firecrow Silvernight (fire@firecrow.com) licensed under the MIT License see LICENSE file */
+
 QrtOpp *opp_assign(QrtSymbol *symbol);
 CtlAbs *exec_cell(QrtCtx *ctx, QrtCell *cell);
 
