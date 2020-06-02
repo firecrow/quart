@@ -45,7 +45,7 @@ CtlAbs *exec_value(QrtCtx *ctx, CtlAbs *value){
                 vblock = vblock->parent;
             }
             if(!newval){
-                ctl_xerrlog("value not found");
+                QrtError("value not found");
             }
             value = newval;
         }else{

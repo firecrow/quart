@@ -59,7 +59,8 @@ QrtCell *build_cell(QrtCtx *ctx, QrtCell *actor, QrtCell *args){
             bblock = ctx->block; 
             pop_block(ctx);
             if(bblock && bblock->parent_cell){
-                bblock->parent_cell->next = args;
+                if(args && is_valid_cell_next(args))
+                    bblock->parent_cell->next = args;
                 ctx->indent -= 4;
             }
         }

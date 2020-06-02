@@ -83,6 +83,15 @@ int is_break_value(CtlAbs *value){
     }
 }
 
+int is_valid_cell_next(QrtCell *cell){
+   QrtBlock *block;
+   if((block = asQrtBlock(cell->value)) && block->type == '}'){
+       return 0; 
+   }
+   return 1;
+}
+
+
 #define QrtError(XARG) \
     if(XARG)\
         printf("RuntimeError %s:%d:%s %s\n", __FILE__, __LINE__, __func__, XARG); \
