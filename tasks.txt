@@ -5,8 +5,8 @@ x get cell design into function call stacks
       |_____/-block -> cells----
 
 x nested arithmetic
-- clean up build to match exec
->   - remove close cells from list
+x clean up build to match exec
+    x remove close cells from list
     x remove value fetching
 - lexical scoped variable lookup 
     x variables inluded in broader statements (math for now)
