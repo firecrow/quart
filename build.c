@@ -8,6 +8,14 @@ QrtCell *break_chain_cell(QrtCell *cell){
     return next;
 }
 
+QrtCell *skip_cell(QrtCell *cell){
+    QrtCell *next;
+    if(!cell) return NULL;
+    next = cell->next;
+    cell->next = NULL;
+    return next;
+}
+
 void push_block(QrtCtx *ctx, QrtBlock *block){ 
     if(block != ctx->block){
         block->type = 'x';
@@ -55,7 +63,6 @@ QrtCell *build_cell(QrtCtx *ctx, QrtCell *actor, QrtCell *args){
                 ctx->indent -= 4;
             }
         }
-
     }
     return args;
 }
