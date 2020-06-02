@@ -52,10 +52,6 @@ QrtCell *build_cell(QrtCtx *ctx, QrtCell *actor, QrtCell *args){
             ctx->indent += 4;
         }else if(vblock->type == '}'){
             break_chain_cell(actor->prev);
-            printf("|||| ");print_cell(actor);
-            printf("|||| ");print_cell(actor->prev);
-            printf("|||| ");print_cell(args);
-            printf("_____________________________\n");
             bblock = ctx->block; 
             pop_block(ctx);
             if(bblock && bblock->parent_cell){

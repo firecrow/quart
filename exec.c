@@ -4,7 +4,6 @@ QrtOpp *opp_assign(QrtSymbol *symbol);
 CtlAbs *exec_cell(QrtCtx *ctx, QrtCell *cell);
 
 QrtOpp *push_opp(QrtBlock *block, QrtOpp *opp){
-    printf("-> push opp %c:%d block:%d\n", opp->opp_type, opp->base.id, block->base.id);
     if(block->opp){
         opp->parent = block->opp;
         opp->parent->next = opp;
@@ -14,7 +13,6 @@ QrtOpp *push_opp(QrtBlock *block, QrtOpp *opp){
 
 QrtOpp *pop_opp(QrtBlock *block){
     QrtOpp *opp = block->opp;
-    printf("<- pop opp %c:%d block:%d\n", opp->opp_type, opp->base.id, block->base.id);
     if(opp->parent){
         opp->parent->next = opp->next;
     }
@@ -34,8 +32,6 @@ CtlAbs *exec_value(QrtCtx *ctx, CtlAbs *value){
     QrtSymbol *symbol;
     CtlAbs *newval;
     CtlInt *intvalue;
-    print_indent(ctx->indent);print_block(ctx->block);
-    print_indent(ctx->indent);printf("\x1b[36m");print_value(value); 
     if((symbol = asQrtSymbol(value))){
         if(symbol->type == 'x'){
             vblock = ctx->block;
@@ -89,7 +85,6 @@ CtlAbs *exec_cell(QrtCtx *ctx, QrtCell *cell){
         print_indent(ctx->indent);print_cell(cell); 
         value = exec_value(ctx, cell->value);
         cell = cell->next;
-        printf("next-------------------------------------------------------------------->");print_cell(cell);
     }
     return value;
 }
