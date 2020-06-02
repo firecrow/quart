@@ -4,6 +4,7 @@ typedef struct qrt_cell {
     struct base base;
     CtlAbs *value;
     struct qrt_cell *next;
+    struct qrt_cell *prev;
 } QrtCell;
 
 struct qrt_opp;

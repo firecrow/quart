@@ -78,6 +78,7 @@ QrtCell *make_token(struct qrt_ctx *ctx, CtlCounted *name, QrtCell *current){
         ctx->start = node;
     }else{
         current->next = node;
+        node->prev = current;
     }
 
     return node;

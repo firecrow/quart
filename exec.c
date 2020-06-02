@@ -72,7 +72,7 @@ CtlAbs *exec_cell(QrtCtx *ctx, QrtCell *cell){
     if(!cell) return NULL;
     CtlAbs *value = NULL;
 
-    while(cell->next){
+    while(cell){
         print_indent(ctx->indent);print_cell(cell); 
         value = exec_value(ctx, cell->value);
         cell = cell->next;
