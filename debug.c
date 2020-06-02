@@ -1,5 +1,6 @@
 /* Copyright 2020 Firecrow Silvernight (fire@firecrow.com) licensed under the MIT License see LICENSE file */
 char *get_node_value_str(CtlAbs *value){
+    if(!value) return "";
     char *node_value = "";
     if(value->base.class == CLASS_BLOCK){
         node_value = ctl_counted_to_cstr(ctl_counted_format("%c", ((QrtBlock *)value)->type));

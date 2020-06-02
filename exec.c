@@ -4,6 +4,7 @@ QrtOpp *opp_assign(QrtSymbol *symbol);
 CtlAbs *exec_cell(QrtCtx *ctx, QrtCell *cell);
 
 QrtOpp *push_opp(QrtBlock *block, QrtOpp *opp){
+    printf("-> push opp %c:%d block:%d\n", opp->opp_type, opp->base.id, block->base.id);
     if(block->opp){
         opp->parent = block->opp;
         opp->parent->next = opp;
@@ -13,6 +14,7 @@ QrtOpp *push_opp(QrtBlock *block, QrtOpp *opp){
 
 QrtOpp *pop_opp(QrtBlock *block){
     QrtOpp *opp = block->opp;
+    printf("<- pop opp %c:%d block:%d\n", opp->opp_type, opp->base.id, block->base.id);
     if(opp->parent){
         opp->parent->next = opp->next;
     }
@@ -26,17 +28,25 @@ QrtOpp *pop_opp(QrtBlock *block){
 
 CtlAbs *exec_value(QrtCtx *ctx, CtlAbs *value){
     QrtBlock *block;
+    QrtBlock *vblock;
     QrtOpp *opp = NULL;
     QrtSep *sep;
     QrtSymbol *symbol;
+    CtlAbs *newval;
     CtlInt *intvalue;
     print_indent(ctx->indent);print_block(ctx->block);
     if((symbol = asQrtSymbol(value))){
         if(symbol->type == 'x'){
-            value = ctl_tree_get(ctx->block->namespace, (CtlAbs *)symbol->name);
-            if(!value){
+            vblock = ctx->block;
+            newval = NULL;
+            while(!newval && vblock){
+                newval = ctl_tree_get(vblock->namespace, (CtlAbs *)symbol->name);
+                vblock = vblock->parent;
+            }
+            if(!newval){
                 ctl_xerrlog("value not found");
             }
+            value = newval;
         }else{
             opp = push_opp(ctx->block, opp_assign(symbol));
         }

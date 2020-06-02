@@ -6,6 +6,7 @@ CtlAbs *math_call(QrtCtx *ctx, CtlAbs *value){
     print_value(value);
     QrtOpp *opp = block->opp;
     if(!asCtlInt(value)){
+        printf("knockout of opp:");print_value(value);
         pop_opp(block);
         return value;
     }
