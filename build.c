@@ -43,7 +43,11 @@ QrtCell *build_cell(QrtCtx *ctx, QrtCell *actor, QrtCell *args){
             push_block(ctx, vblock);
             ctx->indent += 4;
         }else if(vblock->type == '}'){
-            args = break_chain_cell(actor->prev)->next;
+            break_chain_cell(actor->prev);
+            printf("|||| ");print_cell(actor);
+            printf("|||| ");print_cell(actor->prev);
+            printf("|||| ");print_cell(args);
+            printf("_____________________________\n");
             bblock = ctx->block; 
             pop_block(ctx);
             if(bblock && bblock->parent_cell){

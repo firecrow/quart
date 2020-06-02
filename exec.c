@@ -35,6 +35,7 @@ CtlAbs *exec_value(QrtCtx *ctx, CtlAbs *value){
     CtlAbs *newval;
     CtlInt *intvalue;
     print_indent(ctx->indent);print_block(ctx->block);
+    print_indent(ctx->indent);printf("\x1b[36m");print_value(value); 
     if((symbol = asQrtSymbol(value))){
         if(symbol->type == 'x'){
             vblock = ctx->block;
