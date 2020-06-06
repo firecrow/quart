@@ -61,8 +61,10 @@ CtlAbs *exec_value(QrtCtx *ctx, CtlAbs *value){
             ctx->block = ctx->block->parent;
             print_value(value);
         }
+        /*
         ctx->block->reg = NULL;
         ctx->block->opp = NULL;
+        */
     }
     if(asQrtOpp(value)){
         opp = push_opp(ctx->block, asQrtOpp(value));
@@ -85,6 +87,7 @@ CtlAbs *exec_cell(QrtCtx *ctx, QrtCell *cell){
 
     while(cell){
         print_indent(ctx->indent);print_cell(cell); 
+        print_indent(ctx->indent);print_block(ctx->block); 
         value = exec_value(ctx, cell->value);
         cell = cell->next;
     }
