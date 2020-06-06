@@ -49,30 +49,32 @@ CtlAbs *exec_value(QrtCtx *ctx, CtlAbs *value){
         }
     }
     if((block = asQrtBlock(value))){
-        if(block->type == '}'){
-            return NULL;
-        }else{
-            ctx->block = block;
+        block->is_live = 1;
+        ctx->block = block;
+    }
+    if((sep = asQrtSep(value))){
+        if(ctx->block->is_live){
+            ctx->block->is_live = 0;
             ctx->indent += 2;
-            value = exec_cell(ctx, block->branch);  
+            value = exec_cell(ctx, ctx->block->branch);
             ctx->indent -= 2;
             ctx->block = ctx->block->parent;
+            print_value(value);
         }
+        ctx->block->reg = NULL;
+        ctx->block->opp = NULL;
     }
     if(asQrtOpp(value)){
         opp = push_opp(ctx->block, asQrtOpp(value));
     }
     if(!opp && ctx->block->opp){
+        printf("in block opp: ");print_value(ctx->block->opp);
         value = ctx->block->opp->call(ctx, value);
     }
     if((intvalue = asCtlInt(value))){
         if(ctx->block->reg == NULL){
             ctx->block->reg = (CtlAbs *)intvalue;
         }
-    }
-    if((sep = asQrtSep(value))){
-        ctx->block->reg = NULL;
-        ctx->block->opp = NULL;
     }
     return value;
 }

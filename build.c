@@ -33,15 +33,12 @@ QrtBlock *pop_block(QrtCtx *ctx){
 
 QrtCell *build_cell(QrtCtx *ctx, QrtCell *actor, QrtCell *args){
     QrtSymbol *symbol;
-    QrtSep *sep;
     QrtBlock *block = ctx->block;
     QrtBlock *vblock, *closeb, *ablock, *bblock;
     CtlInt *qnumber;
     QrtOpp *opp;
 
     CtlAbs *value = actor->value;
-    if((sep = asQrtSep(value))){
-    }
     if(!args){
         return NULL;
     }

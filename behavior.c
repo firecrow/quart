@@ -31,8 +31,10 @@ CtlAbs *opp_assign_call(QrtCtx *ctx, CtlAbs *value){
     QrtBlock *block = ctx->block;
     QrtSymbol *symbol;
     if((symbol = asQrtSymbol(block->opp->value))){
-        symbol->name->data++;
-        symbol->name->length--;
+        if(is_symbol_type(symbol->name->data[0])){
+            symbol->name->data++;
+            symbol->name->length--;
+        }
         ctl_tree_insert(block->namespace, (CtlAbs *)symbol->name, value);
     }
     pop_opp(block);

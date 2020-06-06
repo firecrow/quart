@@ -15,6 +15,11 @@ int is_sep(char c){
     return (c == ';' || c == '\n');
 }
 
+int is_symbol_type(char c){
+    return (c == ':' || c == '.' || c == '&');
+}
+
+
 int is_alpha(char c){
     return (c >= 65 && c <= 90) || (c >=97 && c <= 122);
 }
