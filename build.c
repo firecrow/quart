@@ -37,6 +37,8 @@ QrtCell *build_cell(QrtCtx *ctx, QrtCell *actor, QrtCell *args){
     QrtBlock *vblock, *closeb, *ablock, *bblock;
     CtlInt *qnumber;
     QrtOpp *opp;
+    QrtSep *sep;
+    int block_is_live = 0;
 
     CtlAbs *value = actor->value;
     if(!args){
@@ -46,15 +48,21 @@ QrtCell *build_cell(QrtCtx *ctx, QrtCell *actor, QrtCell *args){
         if(vblock->type == '{'){
             vblock->branch = break_chain_cell(actor);
             push_block(ctx, vblock);
-            ctx->indent += 4;
         }else if(vblock->type == '}'){
             break_chain_cell(actor->prev);
             bblock = ctx->block; 
             pop_block(ctx);
-            if(bblock && bblock->parent_cell){
+            ctx->block->shelf = args;
+            block_is_live = 1;
+        }
+        return args;
+    }
+    if(is_breaking_value(value)){
+        if(block_is_live){
+            block_is_live = 0;
+            if(ctx->block->parent_cell){
                 if(args && is_valid_cell_next(args))
-                    bblock->parent_cell->next = args;
-                ctx->indent -= 4;
+                    ctx->block->parent_cell->next = break_chain_cell(args);
             }
         }
     }

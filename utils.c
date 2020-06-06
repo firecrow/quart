@@ -96,6 +96,16 @@ int is_valid_cell_next(QrtCell *cell){
    return 1;
 }
 
+int is_breaking_value(CtlAbs *value){
+   if(asQrtBlock(value)){
+       return 1; 
+   }
+   if(asQrtSep(value)){
+       return 1; 
+   }
+   return 0;
+}
+
 
 #define QrtError(XARG) \
     if(XARG)\
