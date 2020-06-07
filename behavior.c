@@ -23,7 +23,9 @@ CtlAbs *math_call(QrtCtx *ctx, CtlAbs *value){
             intreg->value = intreg->value * asCtlInt(value)->value;    
         }
     }
-    print_indent(ctx->indent);printf("\x1b[36mreg\x1b[0m:");print_value(block->reg);
+    print_indent(ctx->indent);printf("\x1b[36m%d  \x1b[0m\n", regval);
+    print_indent(ctx->indent);printf("\x1b[36m%c  \x1b[0m:", opp->opp_type);print_value(value);
+    print_indent(ctx->indent);printf("\x1b[36m=   \x1b[0m:");print_value(block->reg);
     return block->reg;
 }
 

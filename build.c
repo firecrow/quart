@@ -52,17 +52,17 @@ QrtCell *build_cell(QrtCtx *ctx, QrtCell *actor, QrtCell *args){
             break_chain_cell(actor->prev);
             bblock = ctx->block; 
             pop_block(ctx);
-            ctx->block->shelf = args;
+            bblock->shelf = args;
             block_is_live = 1;
         }
-        return args;
     }
     if(is_breaking_value(value)){
+        if(!ctx->block->parent_cell)
+            return args;
         if(block_is_live){
             block_is_live = 0;
-            if(ctx->block->parent_cell){
-                if(args && is_valid_cell_next(args))
-                    ctx->block->parent_cell->next = break_chain_cell(args);
+            if(is_valid_cell_next(args)){
+                bblock->parent_cell->next = break_chain_cell(args->next);
             }
         }
     }

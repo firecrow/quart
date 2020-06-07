@@ -49,14 +49,18 @@ CtlAbs *exec_value(QrtCtx *ctx, CtlAbs *value){
         }
     }
     if((block = asQrtBlock(value))){
-        ctx->block = block;
-        ctx->indent += 2;
-        printf("shelf.....................................\n");
-        value = exec_cell(ctx, ctx->block->shelf);
-        printf("branch.....................................\n");
-        value = exec_cell(ctx, ctx->block->branch);
-        ctx->indent -= 2;
-        ctx->block = ctx->block->parent;
+        if(block->type == 'x'){
+            ctx->block = block;
+            ctx->indent += 2;
+            printf("shelf.....................................\n");
+            exec_cell(ctx, ctx->block->shelf);
+            printf("branch.....................................\n");
+            value = exec_cell(ctx, ctx->block->branch);
+            printf("deindent\n");
+            ctx->indent -= 2;
+            ctx->block = ctx->block->parent;
+            fflush(stdout);
+        }
     }
     if((sep = asQrtSep(value))){
         ctx->block->reg = NULL;
