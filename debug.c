@@ -57,9 +57,10 @@ void print_block(QrtBlock *block){
         }
     }
 
-    printf("shelf-----------");print_cell(block->shelf);
-    printf("branch-----------");print_cell(block->branch);
-    printf("next-----------");print_cell(block->parent_cell->next);
+    printf("\x1b[32mshelf ");print_cell(block->shelf);
+    printf("\x1b[32mbranch ");print_cell(block->branch);
+    printf("\x1b[32mnext ");print_cell(block->parent_cell->next);
+    printf("\x1b[0m");
 
 }
 void print_indent(int i){

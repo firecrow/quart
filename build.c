@@ -59,11 +59,9 @@ QrtCell *build_cell(QrtCtx *ctx, QrtCell *actor, QrtCell *args){
     if(is_breaking_value(value)){
         if(!ctx->block->parent_cell)
             return args;
-        if(block_is_live){
+        if(block_is_live && is_valid_cell_next(actor)){
             block_is_live = 0;
-            if(is_valid_cell_next(args)){
-                bblock->parent_cell->next = break_chain_cell(args->next);
-            }
+            bblock->parent_cell->next = break_chain_cell(args->next);
         }
     }
     return args;
