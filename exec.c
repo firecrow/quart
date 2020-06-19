@@ -53,11 +53,6 @@ CtlAbs *exec_value(QrtCtx *ctx, CtlAbs *value){
             ctx->block = block;
             ctx->indent += 2;
 
-            printf(".............................shelf.......................................\n");
-            exec_cell(ctx, ctx->block->shelf);
-            ctx->block->reg = NULL;
-            ctx->block->opp = NULL;
-            printf(".............................branch.......................................\n");
             value = exec_cell(ctx, ctx->block->branch);
 
             ctx->indent -= 2;

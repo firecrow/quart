@@ -14,7 +14,6 @@ typedef struct qrt_block {
     CtlTree *namespace;
     QrtCell *parent_cell;
     QrtCell *branch;
-    QrtCell *shelf;
     int is_live;
     char type;
     CtlAbs *reg;
