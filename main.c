@@ -22,6 +22,7 @@ int run(char *source){
     printf("---------------------------------------------------->\n%s\n", source);
     QrtCtx *ctx = parse(source);
     build(ctx);
+    printf("---------------------------------------------------->\n%s\n", source);
     exec(ctx);
     printf("---------------------------------------------------->\n%s\n", source);
     return 0;
@@ -35,8 +36,11 @@ int main(){
     char *x = ":x 3 :y 3; :z * x y\n :out {\nwrite h\nwrite j \n} out :h 10\n:min {\n .x 10 :z 0 if { x < z } then {x} else {z}\n} min :z 5; min :z 17\n &x 5 &y 10";
 
 
-    run("{+ 1 2 3;};");
+    run("{+ 10 {+ x 7} :x 7;};");
     /*
+    run("{+ 9 12 34 {* {- 2 10} 4}} + 3 10; {+ 12 7};");
+    run("{+ 1 2 3;};");
+
     run("{+ 1 2 {* x y 7} :x 10 :y 13;};");
 
     run("{* 3 {+ x 1 3} :x 2;};"); 
@@ -51,7 +55,6 @@ int main(){
     /*
     run("{+ 9 {* 6 2} 34};");
     run("{+ 9 12 34};");
-    run("{+ 9 12 34 {* {- 2 10} 4}} + 3 10; {+ 12 7};");
 
     run(":run {+ x {* {- 2 10};4};}; run :x 3; + 10 20; :do { + y}\ndo :y 7\n");
 

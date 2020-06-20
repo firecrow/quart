@@ -58,13 +58,12 @@ CtlAbs *exec_value(QrtCtx *ctx, CtlAbs *value){
     }
     if((sep = asQrtSep(value))){
         if(ctx->block->is_live){
-            printf("\x1b[32m pop block\n");
             ctx->block->is_live = 0;
+            ctx->block->reg = NULL;
+            ctx->block->opp = NULL;
             value = exec_cell(ctx, ctx->block->branch);
 
             ctx->indent -= 2;
-            ctx->block->reg = NULL;
-            ctx->block->opp = NULL;
             ctx->block = ctx->block->parent;
         }
     }
