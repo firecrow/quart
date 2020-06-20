@@ -52,7 +52,7 @@ QrtCell *build_cell(QrtCtx *ctx, QrtCell *actor, QrtCell *args){
             break_chain_cell(actor->prev);
             bblock = ctx->block; 
             pop_block(ctx);
-            bblock->parent_cell->next = break_chain_cell(args->next);
+            bblock->parent_cell->next = break_chain_cell(args->prev);
         }
     }
     return args;
