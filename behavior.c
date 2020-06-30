@@ -12,7 +12,7 @@ CtlAbs *math_call(QrtCtx *ctx, CtlAbs *value){
 
 
     if(block->reg == NULL){
-        block->reg = value;
+        block->reg = (CtlAbs *)ctl_int_alloc(asCtlInt(value)->value);
     }else{
         CtlInt *intreg = asCtlInt(block->reg);
         if(opp->opp_type == '-'){

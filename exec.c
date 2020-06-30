@@ -52,20 +52,15 @@ CtlAbs *exec_value(QrtCtx *ctx, CtlAbs *value){
         if(block->type == 'x'){
             ctx->block = block;
             ctx->indent += 2;
-            ctx->block->is_live = 1;
             print_cell(ctx->block->parent_cell->next);
-        }
-    }
-    if((sep = asQrtSep(value))){
-        if(ctx->block->is_live){
-            ctx->block->is_live = 0;
-            ctx->block->reg = NULL;
-            ctx->block->opp = NULL;
             value = exec_cell(ctx, ctx->block->branch);
-
             ctx->indent -= 2;
             ctx->block = ctx->block->parent;
         }
+    }
+    if((sep = asQrtSep(value))){
+        ctx->block->reg = NULL;
+        ctx->block->opp = NULL;
     }
     if(asQrtOpp(value)){
         opp = push_opp(ctx->block, asQrtOpp(value));
